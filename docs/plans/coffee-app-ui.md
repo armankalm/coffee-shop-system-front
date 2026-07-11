@@ -11,13 +11,13 @@ Pixel-perfect тёмный интерфейс мобильного прилож�
 - `npm run dev` (ручная проверка экранов в браузере при 360–430px)
 
 ### Task 1: Инициализация проекта и дизайн-системы
-- [ ] Создать проект `npm create vite@latest . -- --template react-ts` в текущей папке
-- [ ] Установить зависимости и добавить `react-router-dom`
-- [ ] Настроить ESLint + tsconfig (strict), скрипты `lint`, `build`, `dev` в package.json
-- [ ] Создать `src/styles/tokens.css` с CSS-переменными: `--bg:#12161A`, `--surface:#1A1F24`, `--accent:#2F54EB`, `--accent-alt:#3B59E9`, `--text:#FFFFFF`, `--text-muted:#8A8F98`, радиусы `--r-lg:24px`/`--r-md:16px`/`--r-sm:12px`/`--r-xs:8px`
-- [ ] Подключить шрифт Inter, задать глобальный reset и `--bg` как фон body в `src/styles/global.css`
-- [ ] Добавить утилиту `.hide-scrollbar` (скрытый скроллбар для `overflow-x: auto`) и safe-area паддинги через `env(safe-area-inset-*)`
-- [ ] Проверить: `npm run dev` стартует, тёмный фон применён
+- [x] Создать проект `npm create vite@latest . -- --template react-ts` в текущей папке
+- [x] Установить зависимости и добавить `react-router-dom`
+- [x] Настроить ESLint + tsconfig (strict), скрипты `lint`, `build`, `dev` в package.json
+- [x] Создать `src/styles/tokens.css` с CSS-переменными: `--bg:#12161A`, `--surface:#1A1F24`, `--accent:#2F54EB`, `--accent-alt:#3B59E9`, `--text:#FFFFFF`, `--text-muted:#8A8F98`, радиусы `--r-lg:24px`/`--r-md:16px`/`--r-sm:12px`/`--r-xs:8px`
+- [x] Подключить шрифт Inter, задать глобальный reset и `--bg` как фон body в `src/styles/global.css`
+- [x] Добавить утилиту `.hide-scrollbar` (скрытый скроллбар для `overflow-x: auto`) и safe-area паддинги через `env(safe-area-inset-*)`
+- [x] Проверить: `npm run dev` стартует, тёмный фон применён
 
 ### Task 2: Переиспользуемые UI-компоненты
 - [ ] `src/components/Button` — варианты `primary` (синий), `light` (белый), `pill/FAB`; CSS Module
