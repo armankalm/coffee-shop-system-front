@@ -36,4 +36,19 @@ describe('App', () => {
     expect(renderRoute(`/product/${featuredProduct.id}`)).toContain(featuredProduct.title)
     expect(renderRoute('/cart')).toContain('Вместе вкуснее')
   })
+
+  it('renders the completed profile screen layout', () => {
+    const markup = renderRoute('/profile')
+
+    expect(markup).toContain('aria-label="Назад"')
+    expect(markup).toContain('aria-label="Открыть чат"')
+    expect(markup).toContain('Алия Садыкова')
+    expect(markup).toContain('+7 701 555 24 10')
+    expect(markup).toContain('hide-scrollbar')
+    expect(markup).toContain('Бонусы недели')
+    expect(markup).toContain('08.07.2026')
+    expect(markup).toContain('ТРЦ Mega Park')
+    expect(markup).toContain('aria-label="Напитки в заказе"')
+    expect(markup).toContain('aria-label="Повторить заказ"')
+  })
 })
