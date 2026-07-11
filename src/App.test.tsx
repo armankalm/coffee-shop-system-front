@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 
 import App from './App'
-import { categories, featuredProduct, formatMoney, products } from './mocks'
+import { categories, featuredProduct, formatMoney, modifiers, products } from './mocks'
 
 function renderRoute(route: string) {
   return renderToStaticMarkup(
@@ -35,6 +35,30 @@ describe('App', () => {
     expect(renderRoute('/catalog')).toContain('Каталог')
     expect(renderRoute(`/product/${featuredProduct.id}`)).toContain(featuredProduct.title)
     expect(renderRoute('/cart')).toContain('Вместе вкуснее')
+  })
+
+  it('renders the completed product detail screen layout', () => {
+    const markup = renderRoute(`/product/${featuredProduct.id}`)
+    const productModifiers = modifiers.filter((modifier) => featuredProduct.modifierIds.includes(modifier.id))
+    const selectedSize = featuredProduct.sizes.find((size) => size.price === featuredProduct.price)
+
+    expect(markup).toContain('aria-labelledby="product-title"')
+    expect(markup).toContain(featuredProduct.title)
+    expect(markup).toContain(featuredProduct.imageAlt)
+    expect(markup).toContain(featuredProduct.description)
+    expect(markup).toContain(formatMoney(featuredProduct.price))
+    expect(markup).toContain(`${featuredProduct.nutrition.calories}`)
+    expect(markup).toContain(`${featuredProduct.nutrition.proteins}`)
+    expect(markup).toContain('aria-expanded="false"')
+    expect(markup).toContain('hide-scrollbar')
+    expect(markup).toContain('aria-pressed="true"')
+    expect(markup).toContain(selectedSize?.label)
+    expect(markup).toContain('href="/catalog"')
+    expect(markup).toContain('href="/cart"')
+
+    productModifiers.forEach((modifier) => {
+      expect(markup).toContain(modifier.title)
+    })
   })
 
   it('renders the completed catalog tabs and active category product grid', () => {
