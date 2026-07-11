@@ -1,17 +1,27 @@
-import { Link } from 'react-router-dom'
-
 import { Button, ListItem } from '../components'
 import { cityPoints, recentPoints } from '../mocks'
 import styles from './Screens.module.css'
 
 export function LocationsScreen() {
   return (
-    <section className={styles.screen} aria-labelledby="locations-title">
-      <header className={styles.header}>
-        <p className={styles.eyebrow}>drinkit</p>
-        <h1 className={styles.title} id="locations-title">
-          Выбор адреса
-        </h1>
+    <section className={`${styles.screen} ${styles.locationScreen}`} aria-labelledby="locations-title">
+      <h1 className={styles.visuallyHidden} id="locations-title">
+        Выбор места заказа
+      </h1>
+
+      <header className={styles.locationTopBar} aria-label="Поиск точки заказа">
+        <div className={styles.searchField}>
+          <span className={styles.searchIcon} aria-hidden="true">
+            ⌕
+          </span>
+          <input className={styles.searchInput} type="search" placeholder="Поиск" aria-label="Поиск" />
+          <button className={styles.mapButton} type="button" aria-label="Открыть карту">
+            <span aria-hidden="true">⌖</span>
+          </button>
+        </div>
+        <button className={styles.closeButton} type="button" aria-label="Закрыть выбор адреса">
+          ×
+        </button>
       </header>
 
       <section className={styles.section} aria-labelledby="recent-points-title">
@@ -19,14 +29,14 @@ export function LocationsScreen() {
           <h2 className={styles.sectionTitle} id="recent-points-title">
             Недавние
           </h2>
-          <span className={styles.meta}>{recentPoints.length}</span>
         </div>
-        <div className={styles.list}>
+        <div className={styles.locationList}>
           {recentPoints.map((point) => (
             <ListItem
               address={point.address}
               key={point.id}
               marker={point.isSelected === true}
+              markerLabel="Выбранная точка"
               time={`${point.readyTimeLabel} · ${point.distanceLabel}`}
               title={point.title}
             />
@@ -52,11 +62,14 @@ export function LocationsScreen() {
         </div>
       </section>
 
-      <div className={styles.actions}>
-        <Button variant="fab">Рядом со мной</Button>
-        <Link className={styles.linkButton} to="/catalog">
-          Каталог
-        </Link>
+      <div className={styles.locationFabDock}>
+        <Button className={styles.nearbyFab} variant="fab" aria-label="Найти ближайшую точку">
+          <span aria-hidden="true">⌖</span>
+          <span>Рядом со мной</span>
+          <span className={styles.fabArrow} aria-hidden="true">
+            →
+          </span>
+        </Button>
       </div>
     </section>
   )

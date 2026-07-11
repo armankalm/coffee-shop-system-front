@@ -18,9 +18,16 @@ describe('App', () => {
     const markup = renderRoute('/locations')
 
     expect(markup).toContain('safe-area')
-    expect(markup).toContain('Выбор адреса')
+    expect(markup).toContain('Выбор места заказа')
+    expect(markup).toContain('placeholder="Поиск"')
+    expect(markup).toContain('aria-label="Открыть карту"')
+    expect(markup).toContain('aria-label="Закрыть выбор адреса"')
+    expect(markup).toContain('Недавние')
+    expect(markup).toContain('Алматы')
     expect(markup).toContain('ТРЦ Mega Park')
-    expect(markup).toContain('href="/catalog"')
+    expect(markup).toContain('aria-label="Выбранная точка"')
+    expect(markup).toContain('Рядом со мной')
+    expect(markup).toContain('aria-label="Найти ближайшую точку"')
   })
 
   it('renders all five route skeletons', () => {
