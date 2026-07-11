@@ -1,0 +1,87 @@
+.card {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  grid-template-rows: 122px minmax(40px, auto) auto;
+  gap: 11px;
+  border-radius: var(--r-md);
+  padding: 10px 10px 12px;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+  transition:
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.card:active {
+  transform: scale(0.985);
+}
+
+.card:hover {
+  background: #20262c;
+}
+
+.imageFrame {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--r-sm);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 56%),
+    #151a1f;
+}
+
+.image {
+  max-width: 92%;
+  max-height: 112px;
+  object-fit: contain;
+}
+
+.badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+}
+
+.title {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.28;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.price {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.arrow {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+}

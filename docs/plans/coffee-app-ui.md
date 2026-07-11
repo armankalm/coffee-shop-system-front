@@ -20,14 +20,14 @@ Pixel-perfect тёмный интерфейс мобильного прилож�
 - [x] Проверить: `npm run dev` стартует, тёмный фон применён
 
 ### Task 2: Переиспользуемые UI-компоненты
-- [ ] `src/components/Button` — варианты `primary` (синий), `light` (белый), `pill/FAB`; CSS Module
-- [ ] `src/components/Badge` — цветные теги на изображении (`decaf`, `protein 21,2 g`, оранжевый `жаз`)
-- [ ] `src/components/ListItem` — название (bold, белый), адрес и время (серый), опциональный маркер-круг справа
-- [ ] `src/components/ProductCard` — тёмный фон, изображение по центру, Badge, название (2 строки), цена, стрелка `>`
-- [ ] `src/components/CrossSellCard` — блюдо на тёмном фоне, название, цена, кнопка `+`
-- [ ] `src/components/HScroll` — обёртка с `overflow-x: auto` и скрытым скроллбаром
-- [ ] `src/components/NutritionRow` — ряд КБЖУ (ккал/жиры/углеводы/белки)
-- [ ] `src/components/Stepper` — счётчик количества `- N +`
+- [x] `src/components/Button` — варианты `primary` (синий), `light` (белый), `pill/FAB`; CSS Module
+- [x] `src/components/Badge` — цветные теги на изображении (`decaf`, `protein 21,2 g`, оранжевый `жаз`)
+- [x] `src/components/ListItem` — название (bold, белый), адрес и время (серый), опциональный маркер-круг справа
+- [x] `src/components/ProductCard` — тёмный фон, изображение по центру, Badge, название (2 строки), цена, стрелка `>`
+- [x] `src/components/CrossSellCard` — блюдо на тёмном фоне, название, цена, кнопка `+`
+- [x] `src/components/HScroll` — обёртка с `overflow-x: auto` и скрытым скроллбаром
+- [x] `src/components/NutritionRow` — ряд КБЖУ (ккал/жиры/углеводы/белки)
+- [x] `src/components/Stepper` — счётчик количества `- N +`
 
 ### Task 3: Моки данных и роутинг
 - [ ] `src/mocks/` — точки заказа (недавние + город), профиль пользователя, история заказов, категории и товары, модификаторы, кросс-селл, платёжные методы
