@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 
 import App from './App'
-import { featuredProduct } from './mocks'
+import { categories, featuredProduct, formatMoney, products } from './mocks'
 
 function renderRoute(route: string) {
   return renderToStaticMarkup(
@@ -35,6 +35,35 @@ describe('App', () => {
     expect(renderRoute('/catalog')).toContain('Каталог')
     expect(renderRoute(`/product/${featuredProduct.id}`)).toContain(featuredProduct.title)
     expect(renderRoute('/cart')).toContain('Вместе вкуснее')
+  })
+
+  it('renders the completed catalog tabs and active category product grid', () => {
+    const markup = renderRoute('/catalog')
+    const activeCategory = categories[0]!
+    const visibleProducts = products.filter((product) => product.categoryId === activeCategory.id)
+
+    expect(markup).toContain('role="tablist"')
+    expect(markup).toContain('role="tab"')
+    expect(markup).toContain('aria-selected="true"')
+    expect(markup).toContain('role="tabpanel"')
+    expect(markup).toContain('id="catalog-products"')
+    expect(markup).toContain(activeCategory.subtitle)
+
+    categories.forEach((category) => {
+      expect(markup).toContain(category.title)
+    })
+
+    visibleProducts.forEach((product) => {
+      expect(markup).toContain(`aria-label="Open ${product.title}"`)
+      expect(markup).toContain(product.title)
+      expect(markup).toContain(formatMoney(product.price))
+
+      if (product.badge) {
+        expect(markup).toContain(product.badge.label)
+      }
+    })
+
+    expect(markup).not.toContain(featuredProduct.title)
   })
 
   it('renders the completed profile screen layout', () => {

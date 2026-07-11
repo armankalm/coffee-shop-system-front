@@ -219,6 +219,25 @@ export const products: Product[] = [
     modifierIds: ['healthy-addons'],
     crossSellIds: ['oat-porridge'],
   },
+  {
+    id: 'oatmeal-bowl',
+    categoryId: 'breakfast',
+    title: 'Oatmeal with berries',
+    description: 'Oatmeal with milk, berries, and honey.',
+    price: 1200,
+    currency: 'KZT',
+    imageSrc: drinkImage,
+    imageAlt: 'Oatmeal with berries',
+    nutrition: {
+      calories: 212,
+      fats: 5.8,
+      carbs: 34,
+      proteins: 7.6,
+    },
+    sizes: [{ id: 'bowl', label: '1 portion', price: 1200 }],
+    modifierIds: ['healthy-addons'],
+    crossSellIds: ['thin-pancakes'],
+  },
 ]
 
 export const paymentMethods: PaymentMethod[] = [
