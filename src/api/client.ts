@@ -74,3 +74,14 @@ export function apiPost<T>(path: string, data?: unknown, auth = false): Promise<
     auth,
   )
 }
+
+export function apiPatch<T>(path: string, data: unknown): Promise<T> {
+  return request<T>(
+    path,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    },
+    true,
+  )
+}

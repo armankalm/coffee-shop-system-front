@@ -8,7 +8,7 @@ export type AuthResponse = {
 }
 
 export function requestCode(email: string) {
-  return apiPost<{ message: string }>('/auth/request-code', { email })
+  return apiPost<{ message: string; devCode?: string }>('/auth/request-code', { email })
 }
 
 export function verifyCode(email: string, code: string) {

@@ -18,6 +18,7 @@ export function LoginScreen() {
   const [step, setStep] = useState<Step>('email')
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
+  const [devCode, setDevCode] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -29,7 +30,9 @@ export function LoginScreen() {
     setIsSubmitting(true)
 
     try {
-      await requestCode(email)
+      const response = await requestCode(email)
+      setDevCode(response.devCode ?? null)
+      setCode(response.devCode ?? '')
       setStep('code')
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Не удалось отправить код. Попробуйте ещё раз.')
@@ -66,6 +69,9 @@ export function LoginScreen() {
             ? 'Введите email — пришлём одноразовый код для входа.'
             : `Код отправлен на ${email}. Введите 6 цифр из письма.`}
         </p>
+        {devCode ? (
+          <p className={loginStyles.devHint}>Dev-режим: код подставлен автоматически ({devCode})</p>
+        ) : null}
       </div>
 
       {step === 'email' ? (

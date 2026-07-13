@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { ApiError, resolveAssetUrl } from '../api/client'
 import type { ProductDto } from '../api/products'
 import { getProductById } from '../api/products'
+import { useCart } from '../cart/CartContext'
 import { HScroll } from '../components'
 import heroFallback from '../assets/hero.png'
 import styles from './Screens.module.css'
@@ -19,7 +20,11 @@ function formatMoney(amount: number) {
 
 export function ProductScreen() {
   const { productId } = useParams()
+  const navigate = useNavigate()
+  const { addItem } = useCart()
+
   const [state, setState] = useState<LoadState>({ status: 'loading' })
+  const [selectedToppingIds, setSelectedToppingIds] = useState<number[]>([])
 
   useEffect(() => {
     if (!productId) return
@@ -44,6 +49,15 @@ export function ProductScreen() {
     }
   }, [productId])
 
+  const product = state.status === 'ready' ? state.product : null
+
+  const toppingsPrice = useMemo(() => {
+    if (!product) return 0
+    return product.availableToppings
+      .filter((topping) => selectedToppingIds.includes(topping.id))
+      .reduce((sum, topping) => sum + topping.price, 0)
+  }, [product, selectedToppingIds])
+
   if (state.status === 'loading') {
     return (
       <section className={`${styles.screen} ${styles.productScreen}`}>
@@ -52,16 +66,36 @@ export function ProductScreen() {
     )
   }
 
-  if (state.status === 'error') {
+  if (state.status === 'error' || !product) {
     return (
       <section className={`${styles.screen} ${styles.productScreen}`}>
-        <p className={styles.productDescription}>{state.message}</p>
+        <p className={styles.productDescription}>{state.status === 'error' ? state.message : 'Товар не найден.'}</p>
         <Link to="/catalog">Вернуться в каталог</Link>
       </section>
     )
   }
 
-  const { product } = state
+  const totalPrice = product.basePrice + toppingsPrice
+
+  function toggleTopping(toppingId: number) {
+    if (!product) return
+    const topping = product.availableToppings.find((entry) => entry.id === toppingId)
+    if (!topping) return
+
+    setSelectedToppingIds((current) => {
+      if (current.includes(toppingId)) {
+        return current.filter((id) => id !== toppingId)
+      }
+      const withoutIncompatible = current.filter((id) => !topping.incompatibleWithIds.includes(id))
+      return [...withoutIncompatible, toppingId]
+    })
+  }
+
+  function handleAddToCart() {
+    if (!product) return
+    addItem(product, selectedToppingIds, 1)
+    navigate('/cart')
+  }
 
   const toppingsByType = new Map<string, typeof product.availableToppings>()
   for (const topping of product.availableToppings) {
@@ -94,7 +128,7 @@ export function ProductScreen() {
         </div>
 
         <div className={styles.productHeroCopy}>
-          <p className={styles.productPrice}>{formatMoney(product.basePrice)}</p>
+          <p className={styles.productPrice}>{formatMoney(totalPrice)}</p>
         </div>
       </div>
 
@@ -102,25 +136,44 @@ export function ProductScreen() {
         {toppingsByType.size > 0 ? (
           <HScroll className={styles.productModifierScroll} aria-label="Топинги">
             <div className={styles.productModifierRail}>
-              {Array.from(toppingsByType.entries()).map(([typeTitle, toppings]) => (
-                <div className={styles.productModifierCard} key={typeTitle}>
-                  <span className={styles.productModifierTitle}>{typeTitle}</span>
-                  <span className={styles.productModifierFooter}>
-                    <span className={styles.productModifierHint}>
-                      {toppings.map((topping) => topping.name).join(', ')}
-                    </span>
-                  </span>
-                </div>
-              ))}
+              {Array.from(toppingsByType.entries()).map(([typeTitle, toppings]) =>
+                toppings.map((topping) => {
+                  const isSelected = selectedToppingIds.includes(topping.id)
+
+                  return (
+                    <button
+                      aria-pressed={isSelected}
+                      className={styles.productModifierCard}
+                      key={topping.id}
+                      onClick={() => toggleTopping(topping.id)}
+                      type="button"
+                    >
+                      <span className={styles.productModifierTitle}>{topping.name}</span>
+                      <span className={styles.productModifierFooter}>
+                        <span className={styles.productModifierHint}>{typeTitle}</span>
+                        <span className={styles.productModifierPrice}>
+                          {isSelected ? '✓ ' : '+ '}
+                          {formatMoney(topping.price)}
+                        </span>
+                      </span>
+                    </button>
+                  )
+                }),
+              )}
             </div>
           </HScroll>
         ) : null}
       </div>
 
       <div className={styles.productBottomBar}>
-        <Link className={styles.productAddButton} to="/cart" aria-label={`Добавить ${product.name} в корзину`}>
-          + {formatMoney(product.basePrice)}
-        </Link>
+        <button
+          className={styles.productAddButton}
+          onClick={handleAddToCart}
+          type="button"
+          aria-label={`Добавить ${product.name} в корзину`}
+        >
+          + {formatMoney(totalPrice)}
+        </button>
       </div>
     </section>
   )

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import App from './App'
 import { AuthProvider } from './auth/AuthContext'
+import { CartProvider } from './cart/CartContext'
 import { ShopProvider } from './shop/ShopContext'
 
 class MemoryStorage implements Storage {
@@ -36,7 +37,9 @@ function renderRoute(route: string) {
     <MemoryRouter initialEntries={[route]}>
       <AuthProvider>
         <ShopProvider>
-          <App />
+          <CartProvider>
+            <App />
+          </CartProvider>
         </ShopProvider>
       </AuthProvider>
     </MemoryRouter>,
@@ -50,6 +53,7 @@ describe('App', () => {
       JSON.stringify({ accessToken: 'test-access', refreshToken: 'test-refresh', email: 'test@example.com', role: 'USER' }),
     )
     localStorage.removeItem('drinkit.shop')
+    localStorage.removeItem('drinkit.cart')
   })
 
   it('renders the location route inside the safe-area layout', () => {
@@ -83,25 +87,18 @@ describe('App', () => {
     expect(markup).toContain('Загружаем товар')
   })
 
-  it('renders the completed profile screen layout', () => {
+  it('shows a loading state for the profile screen', () => {
     const markup = renderRoute('/profile')
 
     expect(markup).toContain('aria-label="Назад"')
     expect(markup).toContain('aria-label="Открыть чат"')
-    expect(markup).toContain('Алия Садыкова')
-    expect(markup).toContain('+7 701 555 24 10')
-    expect(markup).toContain('hide-scrollbar')
-    expect(markup).toContain('Бонусы недели')
-    expect(markup).toContain('08.07.2026')
-    expect(markup).toContain('ТРЦ Mega Park')
-    expect(markup).toContain('aria-label="Напитки в заказе"')
-    expect(markup).toContain('aria-label="Повторить заказ"')
+    expect(markup).toContain('Загружаем профиль')
   })
 
   it('renders the completed cart screen layout', () => {
     const markup = renderRoute('/cart')
 
-    expect(markup).toContain('Вместе вкуснее')
+    expect(markup).toContain('Корзина пуста')
     expect(markup).toContain('aria-label="Очистить корзину"')
   })
 

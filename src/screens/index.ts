@@ -1,6 +1,8 @@
 export { CartScreen } from './CartScreen'
 export { CatalogScreen } from './CatalogScreen'
+export { EditProfileScreen } from './EditProfileScreen'
 export { LocationsScreen } from './LocationsScreen'
 export { LoginScreen } from './LoginScreen'
+export { OrderStatusScreen } from './OrderStatusScreen'
 export { ProductScreen } from './ProductScreen'
 export { ProfileScreen } from './ProfileScreen'
