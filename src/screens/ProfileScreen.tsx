@@ -26,10 +26,7 @@ const profileStories = [
 ]
 
 function formatOrderDate(value: string) {
-  const date = new Date(value)
-  const day = `${date.getDate()}`.padStart(2, '0')
-  const month = `${date.getMonth() + 1}`.padStart(2, '0')
-  const year = date.getFullYear()
+  const [year, month, day] = value.slice(0, 10).split('-')
 
   return `${day}.${month}.${year}`
 }
