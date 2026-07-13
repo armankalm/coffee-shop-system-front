@@ -6,10 +6,15 @@ import styles from './Screens.module.css'
 
 export function ProductScreen() {
   const { productId } = useParams()
-  const product = products.find((item) => item.id === productId) ?? products[0]
+  const product = products.find((item) => item.id === productId)
 
   if (!product) {
-    return null
+    return (
+      <section className={`${styles.screen} ${styles.productScreen}`}>
+        <p className={styles.productDescription}>Товар не найден.</p>
+        <Link to="/catalog">Вернуться в каталог</Link>
+      </section>
+    )
   }
 
   const productModifiers = modifiers.filter((modifier) => product.modifierIds.includes(modifier.id))
