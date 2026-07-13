@@ -23,7 +23,9 @@ export function CartScreen() {
   const total = rows.reduce((sum, row) => sum + row.item.unitPrice * row.item.quantity, 0)
 
   function updateQuantity(itemId: string, nextQuantity: number) {
-    setItems((prev) => prev.map((item) => (item.id === itemId ? { ...item, quantity: nextQuantity } : item)))
+    setItems((prev) =>
+      prev.map((item) => (item.id === itemId ? { ...item, quantity: Math.max(1, nextQuantity) } : item)),
+    )
   }
 
   function clearCart() {
