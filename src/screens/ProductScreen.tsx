@@ -65,7 +65,7 @@ export function ProductScreen() {
                   className={styles.productModifierCard}
                   key={modifier.id}
                   type="button"
-                  aria-pressed={isToggle ? true : undefined}
+                  aria-pressed={isToggle ? selectedOption?.selected === true : undefined}
                 >
                   <span className={styles.productModifierTitle}>{modifier.title}</span>
                   <span className={styles.productModifierFooter}>

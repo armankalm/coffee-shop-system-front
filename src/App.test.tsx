@@ -51,7 +51,7 @@ describe('App', () => {
     expect(markup).toContain(`${featuredProduct.nutrition.proteins}`)
     expect(markup).toContain('aria-expanded="false"')
     expect(markup).toContain('hide-scrollbar')
-    expect(markup).toContain('aria-pressed="true"')
+    expect(markup).toContain('aria-pressed="false"')
     expect(markup).toContain(selectedSize?.label)
     expect(markup).toContain('href="/catalog"')
     expect(markup).toContain('href="/cart"')

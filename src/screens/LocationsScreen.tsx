@@ -1,8 +1,13 @@
+import { useNavigate } from 'react-router-dom'
+
 import { Button, ListItem } from '../components'
 import { cityPoints, recentPoints } from '../mocks'
 import styles from './Screens.module.css'
 
 export function LocationsScreen() {
+  const navigate = useNavigate()
+  const goToCatalog = () => navigate('/catalog')
+
   return (
     <section className={`${styles.screen} ${styles.locationScreen}`} aria-labelledby="locations-title">
       <h1 className={styles.visuallyHidden} id="locations-title">
@@ -19,7 +24,12 @@ export function LocationsScreen() {
             <span aria-hidden="true">⌖</span>
           </button>
         </div>
-        <button className={styles.closeButton} type="button" aria-label="Закрыть выбор адреса">
+        <button
+          className={styles.closeButton}
+          type="button"
+          aria-label="Закрыть выбор адреса"
+          onClick={goToCatalog}
+        >
           ×
         </button>
       </header>
@@ -37,6 +47,7 @@ export function LocationsScreen() {
               key={point.id}
               marker={point.isSelected === true}
               markerLabel="Выбранная точка"
+              onClick={goToCatalog}
               time={`${point.readyTimeLabel} · ${point.distanceLabel}`}
               title={point.title}
             />
@@ -55,6 +66,7 @@ export function LocationsScreen() {
             <ListItem
               address={point.address}
               key={point.id}
+              onClick={goToCatalog}
               time={`${point.readyTimeLabel} · ${point.distanceLabel}`}
               title={point.title}
             />
@@ -63,7 +75,12 @@ export function LocationsScreen() {
       </section>
 
       <div className={styles.locationFabDock}>
-        <Button className={styles.nearbyFab} variant="fab" aria-label="Найти ближайшую точку">
+        <Button
+          className={styles.nearbyFab}
+          variant="fab"
+          aria-label="Найти ближайшую точку"
+          onClick={goToCatalog}
+        >
           <span aria-hidden="true">⌖</span>
           <span>Рядом со мной</span>
           <span className={styles.fabArrow} aria-hidden="true">

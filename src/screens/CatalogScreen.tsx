@@ -73,6 +73,9 @@ export function CatalogScreen() {
         <Link className={styles.ghostButton} to="/locations">
           Адрес
         </Link>
+        <Link className={styles.ghostButton} to="/profile">
+          Профиль
+        </Link>
         <Link className={styles.linkButton} to="/cart">
           Корзина
         </Link>
