@@ -7,6 +7,15 @@
   padding: 15px 0;
 }
 
+.itemButton {
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
 .content {
   min-width: 0;
 }
