@@ -54,23 +54,19 @@ export function CatalogScreen() {
         id="catalog-products"
         role="tabpanel"
       >
-        {visibleProducts.map((product) => {
-          const badgeProps = product.badge ? { badge: product.badge } : {}
-
-          return (
-            <ProductCard
-              {...badgeProps}
-              aria-label={`Open ${product.title}`}
-              className={styles.productCard}
-              imageAlt={product.imageAlt}
-              imageSrc={product.imageSrc}
-              key={product.id}
-              onClick={() => navigate(`/product/${product.id}`)}
-              price={formatMoney(product.price)}
-              title={product.title}
-            />
-          )
-        })}
+        {visibleProducts.map((product) => (
+          <ProductCard
+            {...(product.badge ? { badge: product.badge } : {})}
+            aria-label={`Open ${product.title}`}
+            className={styles.productCard}
+            imageAlt={product.imageAlt}
+            imageSrc={product.imageSrc}
+            key={product.id}
+            onClick={() => navigate(`/product/${product.id}`)}
+            price={formatMoney(product.price)}
+            title={product.title}
+          />
+        ))}
       </div>
 
       <div className={styles.actions}>

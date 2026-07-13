@@ -1,9 +1,10 @@
 import type { HTMLAttributes, ReactNode } from 'react'
 
+import type { BadgeTone } from '../../types'
 import { classNames } from '../classNames'
 import styles from './Badge.module.css'
 
-export type BadgeTone = 'blue' | 'green' | 'orange' | 'muted'
+export type { BadgeTone }
 
 export type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
   tone?: BadgeTone

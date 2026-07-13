@@ -1,20 +1,16 @@
 import type { ButtonHTMLAttributes } from 'react'
 
-import { Badge, type BadgeTone } from '../Badge'
+import { Badge } from '../Badge'
 import { classNames } from '../classNames'
+import type { ProductBadge } from '../../types'
 import styles from './ProductCard.module.css'
-
-export type ProductCardBadge = {
-  label: string
-  tone?: BadgeTone
-}
 
 export type ProductCardProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & {
   imageAlt: string
   imageSrc: string
   title: string
   price: string
-  badge?: ProductCardBadge
+  badge?: ProductBadge
 }
 
 export function ProductCard({
@@ -32,7 +28,7 @@ export function ProductCard({
       <span className={styles.imageFrame}>
         <img className={styles.image} src={imageSrc} alt={imageAlt} draggable={false} />
         {badge ? (
-          <Badge className={styles.badge} tone={badge.tone ?? 'blue'}>
+          <Badge className={styles.badge} tone={badge.tone}>
             {badge.label}
           </Badge>
         ) : null}

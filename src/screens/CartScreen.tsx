@@ -80,7 +80,7 @@ export function CartScreen() {
                 <Stepper
                   value={item.quantity}
                   min={1}
-                  onDecrease={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                  onDecrease={() => updateQuantity(item.id, item.quantity - 1)}
                   onIncrease={() => updateQuantity(item.id, item.quantity + 1)}
                 />
               </div>
