@@ -1,0 +1,66 @@
+import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
+
+import type { AuthResponse } from '../api/auth'
+
+const STORAGE_KEY = 'drinkit.auth'
+
+export type AuthSession = {
+  accessToken: string
+  refreshToken: string
+  email: string
+  role: string
+}
+
+type AuthContextValue = {
+  session: AuthSession | null
+  login: (auth: AuthResponse) => void
+  logout: () => void
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null)
+
+function readStoredSession(): AuthSession | null {
+  const raw = localStorage.getItem(STORAGE_KEY)
+  if (!raw) return null
+
+  try {
+    return JSON.parse(raw) as AuthSession
+  } catch {
+    return null
+  }
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<AuthSession | null>(() => readStoredSession())
+
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      session,
+      login: (auth) => {
+        const nextSession: AuthSession = {
+          accessToken: auth.accessToken,
+          refreshToken: auth.refreshToken,
+          email: auth.email,
+          role: auth.role,
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(nextSession))
+        setSession(nextSession)
+      },
+      logout: () => {
+        localStorage.removeItem(STORAGE_KEY)
+        setSession(null)
+      },
+    }),
+    [session],
+  )
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}

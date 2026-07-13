@@ -1,31 +1,84 @@
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
-import { HScroll, NutritionRow } from '../components'
-import { formatMoney, modifiers, products } from '../mocks'
+import { ApiError, resolveAssetUrl } from '../api/client'
+import type { ProductDto } from '../api/products'
+import { getProductById } from '../api/products'
+import { HScroll } from '../components'
+import heroFallback from '../assets/hero.png'
 import styles from './Screens.module.css'
+
+type LoadState =
+  | { status: 'loading' }
+  | { status: 'error'; message: string }
+  | { status: 'ready'; product: ProductDto }
+
+function formatMoney(amount: number) {
+  return `${amount.toLocaleString('ru-RU')} ₸`
+}
 
 export function ProductScreen() {
   const { productId } = useParams()
-  const product = products.find((item) => item.id === productId)
+  const [state, setState] = useState<LoadState>({ status: 'loading' })
 
-  if (!product) {
+  useEffect(() => {
+    if (!productId) return
+
+    let cancelled = false
+
+    getProductById(Number(productId))
+      .then((data) => {
+        if (!cancelled) setState({ status: 'ready', product: data })
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setState({
+            status: 'error',
+            message: err instanceof ApiError ? err.message : 'Не удалось загрузить товар.',
+          })
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [productId])
+
+  if (state.status === 'loading') {
     return (
       <section className={`${styles.screen} ${styles.productScreen}`}>
-        <p className={styles.productDescription}>Товар не найден.</p>
+        <p className={styles.productDescription}>Загружаем товар…</p>
+      </section>
+    )
+  }
+
+  if (state.status === 'error') {
+    return (
+      <section className={`${styles.screen} ${styles.productScreen}`}>
+        <p className={styles.productDescription}>{state.message}</p>
         <Link to="/catalog">Вернуться в каталог</Link>
       </section>
     )
   }
 
-  const productModifiers = modifiers.filter((modifier) => product.modifierIds.includes(modifier.id))
-  const selectedSize =
-    product.sizes.find((size) => size.price === product.price) ?? product.sizes.at(-1) ?? product.sizes[0]
-  const selectedPrice = selectedSize?.price ?? product.price
+  const { product } = state
+
+  const toppingsByType = new Map<string, typeof product.availableToppings>()
+  for (const topping of product.availableToppings) {
+    const group = toppingsByType.get(topping.typeNameRu) ?? []
+    group.push(topping)
+    toppingsByType.set(topping.typeNameRu, group)
+  }
 
   return (
     <section className={`${styles.screen} ${styles.productScreen}`} aria-labelledby="product-title">
       <div className={styles.productHero}>
-        <img className={styles.productHeroImage} src={product.imageSrc} alt={product.imageAlt} draggable={false} />
+        <img
+          className={styles.productHeroImage}
+          src={resolveAssetUrl(product.imagePath) ?? heroFallback}
+          alt={product.name}
+          draggable={false}
+        />
         <div className={styles.productHeroShade} aria-hidden="true" />
 
         <div className={styles.productTopControls}>
@@ -33,7 +86,7 @@ export function ProductScreen() {
             ♡
           </button>
           <h1 className={styles.productTopTitle} id="product-title">
-            {product.title}
+            {product.name}
           </h1>
           <Link className={styles.productIconButton} to="/catalog" aria-label="Закрыть карточку товара">
             ×
@@ -41,64 +94,32 @@ export function ProductScreen() {
         </div>
 
         <div className={styles.productHeroCopy}>
-          <p className={styles.productPrice}>{formatMoney(selectedPrice)}</p>
-          <p className={styles.productDescription}>{product.description}</p>
+          <p className={styles.productPrice}>{formatMoney(product.basePrice)}</p>
         </div>
       </div>
 
       <div className={styles.productContent}>
-        <div className={styles.productNutritionBlock}>
-          <NutritionRow
-            calories={product.nutrition.calories}
-            carbs={product.nutrition.carbs}
-            fats={product.nutrition.fats}
-            proteins={product.nutrition.proteins}
-          />
-          <button className={styles.productDetailsButton} type="button" aria-expanded="false">
-            подробнее <span aria-hidden="true">∨</span>
-          </button>
-        </div>
-
-        <HScroll className={styles.productModifierScroll} aria-label="Конструктор модификаторов">
-          <div className={styles.productModifierRail}>
-            {productModifiers.map((modifier) => {
-              const selectedOption = modifier.options.find((option) => option.selected) ?? modifier.options[0]
-              const isToggle = modifier.type === 'toggle'
-
-              return (
-                <button
-                  className={styles.productModifierCard}
-                  key={modifier.id}
-                  type="button"
-                  aria-pressed={isToggle ? selectedOption?.selected === true : undefined}
-                >
-                  <span className={styles.productModifierTitle}>{modifier.title}</span>
+        {toppingsByType.size > 0 ? (
+          <HScroll className={styles.productModifierScroll} aria-label="Топинги">
+            <div className={styles.productModifierRail}>
+              {Array.from(toppingsByType.entries()).map(([typeTitle, toppings]) => (
+                <div className={styles.productModifierCard} key={typeTitle}>
+                  <span className={styles.productModifierTitle}>{typeTitle}</span>
                   <span className={styles.productModifierFooter}>
-                    {isToggle ? (
-                      <span className={styles.productModifierToggle} aria-hidden="true">
-                        <span />
-                      </span>
-                    ) : (
-                      <span className={styles.productModifierHint}>{selectedOption?.title ?? 'Выбрать'}</span>
-                    )}
-                    {!isToggle && selectedOption?.priceDelta ? (
-                      <span className={styles.productModifierPrice}>+ {formatMoney(selectedOption.priceDelta)}</span>
-                    ) : null}
+                    <span className={styles.productModifierHint}>
+                      {toppings.map((topping) => topping.name).join(', ')}
+                    </span>
                   </span>
-                </button>
-              )
-            })}
-          </div>
-        </HScroll>
+                </div>
+              ))}
+            </div>
+          </HScroll>
+        ) : null}
       </div>
 
       <div className={styles.productBottomBar}>
-        <button className={styles.productSizePill} type="button" aria-label="Выбрать объем">
-          <span>{selectedSize?.label ?? '400 мл'}</span>
-          <span aria-hidden="true">⌄</span>
-        </button>
-        <Link className={styles.productAddButton} to="/cart" aria-label={`Добавить ${product.title} в корзину`}>
-          + {formatMoney(selectedPrice)}
+        <Link className={styles.productAddButton} to="/cart" aria-label={`Добавить ${product.name} в корзину`}>
+          + {formatMoney(product.basePrice)}
         </Link>
       </div>
     </section>

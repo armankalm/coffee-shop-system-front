@@ -1,7 +1,9 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
+import { useAuth } from '../auth/AuthContext'
 import { HScroll } from '../components'
 import { formatMoney, orderHistory, pickupPoints, userProfile } from '../mocks'
+import loginStyles from './LoginScreen.module.css'
 import styles from './Screens.module.css'
 
 const profileStories = [
@@ -32,6 +34,14 @@ function formatOrderDate(value: string) {
 }
 
 export function ProfileScreen() {
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+
+  function handleLogout() {
+    logout()
+    navigate('/login', { replace: true })
+  }
+
   return (
     <section className={`${styles.screen} ${styles.profileScreen}`} aria-labelledby="profile-title">
       <header className={styles.profileHeader}>
@@ -102,6 +112,10 @@ export function ProfileScreen() {
           })}
         </div>
       </section>
+
+      <button className={loginStyles.linkAction} onClick={handleLogout} type="button">
+        Выйти из аккаунта
+      </button>
     </section>
   )
 }

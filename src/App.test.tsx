@@ -1,19 +1,57 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import App from './App'
-import { categories, featuredProduct, formatMoney, modifiers, products } from './mocks'
+import { AuthProvider } from './auth/AuthContext'
+import { ShopProvider } from './shop/ShopContext'
+
+class MemoryStorage implements Storage {
+  private store = new Map<string, string>()
+
+  get length() {
+    return this.store.size
+  }
+
+  clear = () => this.store.clear()
+  getItem = (key: string) => this.store.get(key) ?? null
+  key = (index: number) => Array.from(this.store.keys())[index] ?? null
+  removeItem = (key: string) => void this.store.delete(key)
+  setItem = (key: string, value: string) => void this.store.set(key, value)
+}
+
+globalThis.localStorage ??= new MemoryStorage()
+
+const testShop = {
+  id: 1,
+  name: 'ТРЦ Mega Park',
+  city: { id: 1, name: 'Алматы', region: 'Алматы' },
+  address: 'ул. Розыбакиева, 247А',
+  status: 'ACTIVE',
+  statusNameRu: 'Открыта',
+}
 
 function renderRoute(route: string) {
   return renderToStaticMarkup(
     <MemoryRouter initialEntries={[route]}>
-      <App />
+      <AuthProvider>
+        <ShopProvider>
+          <App />
+        </ShopProvider>
+      </AuthProvider>
     </MemoryRouter>,
   )
 }
 
 describe('App', () => {
+  beforeEach(() => {
+    localStorage.setItem(
+      'drinkit.auth',
+      JSON.stringify({ accessToken: 'test-access', refreshToken: 'test-refresh', email: 'test@example.com', role: 'USER' }),
+    )
+    localStorage.removeItem('drinkit.shop')
+  })
+
   it('renders the location route inside the safe-area layout', () => {
     const markup = renderRoute('/locations')
 
@@ -22,72 +60,27 @@ describe('App', () => {
     expect(markup).toContain('placeholder="Поиск"')
     expect(markup).toContain('aria-label="Открыть карту"')
     expect(markup).toContain('aria-label="Закрыть выбор адреса"')
-    expect(markup).toContain('Недавние')
-    expect(markup).toContain('Алматы')
-    expect(markup).toContain('ТРЦ Mega Park')
-    expect(markup).toContain('aria-label="Выбранная точка"')
-    expect(markup).toContain('Рядом со мной')
     expect(markup).toContain('aria-label="Найти ближайшую точку"')
   })
 
-  it('renders all five route skeletons', () => {
-    expect(renderRoute('/profile')).toContain('История заказов')
-    expect(renderRoute('/catalog')).toContain('Каталог')
-    expect(renderRoute(`/product/${featuredProduct.id}`)).toContain(featuredProduct.title)
-    expect(renderRoute('/cart')).toContain('Вместе вкуснее')
+  it('does not render the catalog when no shop is selected yet', () => {
+    expect(renderRoute('/catalog')).not.toContain('Каталог')
   })
 
-  it('renders the completed product detail screen layout', () => {
-    const markup = renderRoute(`/product/${featuredProduct.id}`)
-    const productModifiers = modifiers.filter((modifier) => featuredProduct.modifierIds.includes(modifier.id))
-    const selectedSize = featuredProduct.sizes.find((size) => size.price === featuredProduct.price)
+  it('shows a loading state for the catalog once a shop is selected', () => {
+    localStorage.setItem('drinkit.shop', JSON.stringify(testShop))
 
-    expect(markup).toContain('aria-labelledby="product-title"')
-    expect(markup).toContain(featuredProduct.title)
-    expect(markup).toContain(featuredProduct.imageAlt)
-    expect(markup).toContain(featuredProduct.description)
-    expect(markup).toContain(formatMoney(featuredProduct.price))
-    expect(markup).toContain(`${featuredProduct.nutrition.calories}`)
-    expect(markup).toContain(`${featuredProduct.nutrition.proteins}`)
-    expect(markup).toContain('aria-expanded="false"')
-    expect(markup).toContain('hide-scrollbar')
-    expect(markup).toContain('aria-pressed="false"')
-    expect(markup).toContain(selectedSize?.label)
-    expect(markup).toContain('href="/catalog"')
-    expect(markup).toContain('href="/cart"')
-
-    productModifiers.forEach((modifier) => {
-      expect(markup).toContain(modifier.title)
-    })
-  })
-
-  it('renders the completed catalog tabs and active category product grid', () => {
     const markup = renderRoute('/catalog')
-    const activeCategory = categories[0]!
-    const visibleProducts = products.filter((product) => product.categoryId === activeCategory.id)
 
-    expect(markup).toContain('role="tablist"')
-    expect(markup).toContain('role="tab"')
-    expect(markup).toContain('aria-selected="true"')
-    expect(markup).toContain('role="tabpanel"')
-    expect(markup).toContain('id="catalog-products"')
-    expect(markup).toContain(activeCategory.subtitle)
+    expect(markup).toContain('Каталог')
+    expect(markup).toContain(testShop.name)
+    expect(markup).toContain('Загружаем меню')
+  })
 
-    categories.forEach((category) => {
-      expect(markup).toContain(category.title)
-    })
+  it('shows a loading state for the product detail screen', () => {
+    const markup = renderRoute('/product/1')
 
-    visibleProducts.forEach((product) => {
-      expect(markup).toContain(`aria-label="Open ${product.title}"`)
-      expect(markup).toContain(product.title)
-      expect(markup).toContain(formatMoney(product.price))
-
-      if (product.badge) {
-        expect(markup).toContain(product.badge.label)
-      }
-    })
-
-    expect(markup).not.toContain(featuredProduct.title)
+    expect(markup).toContain('Загружаем товар')
   })
 
   it('renders the completed profile screen layout', () => {
@@ -103,5 +96,20 @@ describe('App', () => {
     expect(markup).toContain('ТРЦ Mega Park')
     expect(markup).toContain('aria-label="Напитки в заказе"')
     expect(markup).toContain('aria-label="Повторить заказ"')
+  })
+
+  it('renders the completed cart screen layout', () => {
+    const markup = renderRoute('/cart')
+
+    expect(markup).toContain('Вместе вкуснее')
+    expect(markup).toContain('aria-label="Очистить корзину"')
+  })
+
+  it('does not render protected screen content for unauthenticated visitors', () => {
+    localStorage.removeItem('drinkit.auth')
+
+    const markup = renderRoute('/profile')
+
+    expect(markup).not.toContain('История заказов')
   })
 })
