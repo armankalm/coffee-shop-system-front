@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import App from './App'
 import { AuthProvider } from './auth/AuthContext'
 import { CartProvider } from './cart/CartContext'
+import { FavoritesProvider } from './favorites/FavoritesContext'
 import { ShopProvider } from './shop/ShopContext'
 
 class MemoryStorage implements Storage {
@@ -37,9 +38,11 @@ function renderRoute(route: string) {
     <MemoryRouter initialEntries={[route]}>
       <AuthProvider>
         <ShopProvider>
-          <CartProvider>
-            <App />
-          </CartProvider>
+          <FavoritesProvider>
+            <CartProvider>
+              <App />
+            </CartProvider>
+          </FavoritesProvider>
         </ShopProvider>
       </AuthProvider>
     </MemoryRouter>,
@@ -68,7 +71,7 @@ describe('App', () => {
   })
 
   it('does not render the catalog when no shop is selected yet', () => {
-    expect(renderRoute('/catalog')).not.toContain('Каталог')
+    expect(renderRoute('/catalog')).not.toContain('id="catalog-title"')
   })
 
   it('shows a loading state for the catalog once a shop is selected', () => {

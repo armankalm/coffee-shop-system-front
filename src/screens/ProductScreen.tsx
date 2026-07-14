@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { ApiError, resolveAssetUrl } from '../api/client'
@@ -6,6 +6,8 @@ import type { ProductDto } from '../api/products'
 import { getProductById } from '../api/products'
 import { useCart } from '../cart/CartContext'
 import { HScroll } from '../components'
+import { classNames } from '../components/classNames'
+import { useFavorites } from '../favorites/FavoritesContext'
 import heroFallback from '../assets/hero.png'
 import styles from './Screens.module.css'
 
@@ -13,6 +15,8 @@ type LoadState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
   | { status: 'ready'; product: ProductDto }
+
+const SIZE_OPTIONS = ['S', 'M', 'L'] as const
 
 function formatMoney(amount: number) {
   return `${amount.toLocaleString('ru-RU')} ₸`
@@ -22,9 +26,11 @@ export function ProductScreen() {
   const { productId } = useParams()
   const navigate = useNavigate()
   const { addItem } = useCart()
+  const { isFavorite, toggleFavorite } = useFavorites()
 
   const [state, setState] = useState<LoadState>({ status: 'loading' })
   const [selectedToppingIds, setSelectedToppingIds] = useState<number[]>([])
+  const [selectedSize, setSelectedSize] = useState<(typeof SIZE_OPTIONS)[number]>('S')
 
   useEffect(() => {
     if (!productId) return
@@ -116,8 +122,14 @@ export function ProductScreen() {
         <div className={styles.productHeroShade} aria-hidden="true" />
 
         <div className={styles.productTopControls}>
-          <button className={styles.productIconButton} type="button" aria-label="Добавить в избранное">
-            ♡
+          <button
+            aria-label={isFavorite(product.id) ? 'Убрать из избранного' : 'Добавить в избранное'}
+            aria-pressed={isFavorite(product.id)}
+            className={styles.productIconButton}
+            onClick={() => toggleFavorite(product)}
+            type="button"
+          >
+            {isFavorite(product.id) ? '♥' : '♡'}
           </button>
           <h1 className={styles.productTopTitle} id="product-title">
             {product.name}
@@ -125,10 +137,6 @@ export function ProductScreen() {
           <Link className={styles.productIconButton} to="/catalog" aria-label="Закрыть карточку товара">
             ×
           </Link>
-        </div>
-
-        <div className={styles.productHeroCopy}>
-          <p className={styles.productPrice}>{formatMoney(totalPrice)}</p>
         </div>
       </div>
 
@@ -166,6 +174,29 @@ export function ProductScreen() {
       </div>
 
       <div className={styles.productBottomBar}>
+        <div
+          className={styles.productSizeGroup}
+          role="group"
+          aria-label="Объём напитка"
+          style={{ '--product-size-index': SIZE_OPTIONS.findIndex((option) => option === selectedSize) } as CSSProperties}
+        >
+          <span className={styles.productSizeThumb} aria-hidden="true" />
+          {SIZE_OPTIONS.map((size) => {
+            const isSelected = selectedSize === size
+
+            return (
+              <button
+                aria-pressed={isSelected}
+                className={classNames(styles.productSizeOption, isSelected ? styles.productSizeOptionActive : undefined)}
+                key={size}
+                onClick={() => setSelectedSize(size)}
+                type="button"
+              >
+                {size}
+              </button>
+            )
+          })}
+        </div>
         <button
           className={styles.productAddButton}
           onClick={handleAddToCart}

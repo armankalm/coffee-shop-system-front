@@ -14,7 +14,3 @@ export function requestCode(email: string) {
 export function verifyCode(email: string, code: string) {
   return apiPost<AuthResponse>('/auth/verify-code', { email, code })
 }
-
-export function refreshTokens(refreshToken: string) {
-  return apiPost<AuthResponse>('/auth/refresh', { refreshToken })
-}

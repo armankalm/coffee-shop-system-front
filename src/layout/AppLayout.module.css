@@ -20,3 +20,7 @@
   min-height: 0;
   overflow-y: auto;
 }
+
+.contentWithNav {
+  padding-bottom: calc(var(--nav-height) + var(--safe-bottom));
+}

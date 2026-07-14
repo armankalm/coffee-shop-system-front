@@ -8,7 +8,7 @@ import { getProductById } from '../api/products'
 import type { UserDto } from '../api/user'
 import { getCurrentUser } from '../api/user'
 import { useAuth } from '../auth/AuthContext'
-import { HScroll } from '../components'
+import { useCart } from '../cart/CartContext'
 import heroFallback from '../assets/hero.png'
 import loginStyles from './LoginScreen.module.css'
 import styles from './Screens.module.css'
@@ -17,27 +17,6 @@ type LoadState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
   | { status: 'ready'; user: UserDto; orders: OrderDto[]; productImages: Map<number, string | null> }
-
-const profileStories = [
-  {
-    id: 'morning',
-    title: 'Утренний сет',
-    subtitle: 'Кофе + завтрак',
-    tone: styles.storyBlue,
-  },
-  {
-    id: 'bonus',
-    title: 'Бонусы недели',
-    subtitle: '+15% на протеин',
-    tone: styles.storyOrange,
-  },
-  {
-    id: 'favorite',
-    title: 'Любимые напитки',
-    subtitle: 'Быстрый повтор',
-    tone: styles.storyGreen,
-  },
-]
 
 function formatMoney(amount: number) {
   return `${amount.toLocaleString('ru-RU')} ₸`
@@ -57,7 +36,10 @@ function initialsFromEmail(email: string) {
 export function ProfileScreen() {
   const { logout } = useAuth()
   const navigate = useNavigate()
+  const { addItem } = useCart()
   const [state, setState] = useState<LoadState>({ status: 'loading' })
+  const [repeatingOrderId, setRepeatingOrderId] = useState<number | null>(null)
+  const [repeatError, setRepeatError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -100,6 +82,48 @@ export function ProfileScreen() {
     navigate('/login', { replace: true })
   }
 
+  async function handleRepeatOrder(order: OrderDto) {
+    setRepeatError(null)
+    setRepeatingOrderId(order.id)
+
+    try {
+      const results = await Promise.all(
+        order.items.map(async (item) => {
+          try {
+            const product = await getProductById(item.productId)
+            return { item, product }
+          } catch {
+            return { item, product: null }
+          }
+        }),
+      )
+
+      const unavailableCount = results.filter(({ product }) => !product || !product.available).length
+
+      for (const { item, product } of results) {
+        if (!product || !product.available) continue
+        addItem(
+          product,
+          item.toppings.map((topping) => topping.id),
+          item.quantity,
+        )
+      }
+
+      if (unavailableCount > 0) {
+        setRepeatError(
+          unavailableCount === order.items.length
+            ? 'Все товары из этого заказа сейчас недоступны.'
+            : 'Некоторые товары из заказа сейчас недоступны и не были добавлены.',
+        )
+        return
+      }
+
+      navigate('/cart')
+    } finally {
+      setRepeatingOrderId(null)
+    }
+  }
+
   return (
     <section className={`${styles.screen} ${styles.profileScreen}`} aria-labelledby="profile-title">
       <header className={styles.profileHeader}>
@@ -130,17 +154,6 @@ export function ProfileScreen() {
             </span>
           </Link>
 
-          <HScroll aria-label="Баннеры профиля">
-            <div className={styles.stories}>
-              {profileStories.map((story) => (
-                <article className={`${styles.story} ${story.tone}`} key={story.id}>
-                  <span className={styles.storyTitle}>{story.title}</span>
-                  <span className={styles.storySubtitle}>{story.subtitle}</span>
-                </article>
-              ))}
-            </div>
-          </HScroll>
-
           <section className={styles.section} aria-labelledby="orders-title">
             <h2 className={styles.sectionTitle} id="orders-title">
               История заказов
@@ -170,13 +183,21 @@ export function ProfileScreen() {
                         ))}
                       </div>
                     </Link>
-                    <Link className={styles.repeatButton} to="/catalog" aria-label="Повторить заказ">
+                    <button
+                      aria-label="Повторить заказ"
+                      className={styles.repeatButton}
+                      disabled={repeatingOrderId === order.id}
+                      onClick={() => handleRepeatOrder(order)}
+                      type="button"
+                    >
                       <span aria-hidden="true">↻</span>
-                    </Link>
+                    </button>
                   </article>
                 ))}
               </div>
             )}
+
+            {repeatError ? <p className={styles.muted}>{repeatError}</p> : null}
           </section>
         </>
       ) : null}

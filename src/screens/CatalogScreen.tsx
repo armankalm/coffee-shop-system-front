@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 
 import { ApiError, resolveAssetUrl } from '../api/client'
 import type { ProductDto } from '../api/products'
 import { getProducts } from '../api/products'
 import { HScroll, ProductCard } from '../components'
+import { useFavorites } from '../favorites/FavoritesContext'
 import { useShop } from '../shop/ShopContext'
 import heroFallback from '../assets/hero.png'
 import styles from './Screens.module.css'
+
+const FAVORITES_CATEGORY_CODE = '__favorites__'
 
 type CategoryOption = {
   code: string
@@ -26,6 +29,7 @@ function formatMoney(amount: number) {
 export function CatalogScreen() {
   const navigate = useNavigate()
   const { shop } = useShop()
+  const { favoriteProducts } = useFavorites()
 
   const [state, setState] = useState<LoadState>({ status: 'loading' })
   const [activeCategoryCode, setActiveCategoryCode] = useState<string | null>(null)
@@ -62,15 +66,17 @@ export function CatalogScreen() {
     for (const product of products) {
       if (!seen.has(product.category)) seen.set(product.category, product.categoryNameRu)
     }
-    return Array.from(seen, ([code, title]) => ({ code, title }))
-  }, [products])
+    const productCategories = Array.from(seen, ([code, title]) => ({ code, title }))
+    if (favoriteProducts.length === 0) return productCategories
+    return [{ code: FAVORITES_CATEGORY_CODE, title: 'Избранное' }, ...productCategories]
+  }, [products, favoriteProducts.length])
 
   const activeCategory = categories.find((category) => category.code === activeCategoryCode) ?? categories[0]
 
-  const visibleProducts = useMemo(
-    () => products.filter((product) => product.category === activeCategory?.code),
-    [products, activeCategory?.code],
-  )
+  const visibleProducts = useMemo(() => {
+    if (activeCategory?.code === FAVORITES_CATEGORY_CODE) return favoriteProducts
+    return products.filter((product) => product.category === activeCategory?.code)
+  }, [products, favoriteProducts, activeCategory?.code])
 
   if (!shop) {
     return <Navigate to="/locations" replace />
@@ -138,18 +144,6 @@ export function CatalogScreen() {
           {visibleProducts.length === 0 ? <p className={styles.muted}>В этой категории пока пусто.</p> : null}
         </>
       ) : null}
-
-      <div className={styles.actions}>
-        <Link className={styles.ghostButton} to="/locations">
-          Адрес
-        </Link>
-        <Link className={styles.ghostButton} to="/profile">
-          Профиль
-        </Link>
-        <Link className={styles.linkButton} to="/cart">
-          Корзина
-        </Link>
-      </div>
     </section>
   )
 }

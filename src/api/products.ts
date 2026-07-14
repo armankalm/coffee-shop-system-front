@@ -17,6 +17,7 @@ export type ProductDto = {
   basePrice: number
   available: boolean
   imagePath: string | null
+  description: string | null
   availableToppings: ToppingDto[]
 }
 
