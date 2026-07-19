@@ -40,11 +40,11 @@
 - [x] Примечание: сессия сейчас несёт только `role: string` (в `AuthResponse`/`AuthSession`), массива permissions нет — поэтому право выводится из роли на клиенте. Если бэк начнёт отдавать `permissions`, `hasPermission` переключается на них без изменения UI.
 
 ### Task 4: Админ-layout с табами
-- [ ] Создать `src/layout/KitchenLayout.tsx` + `KitchenLayout.module.css` — контейнер с верхней панелью табов и `<Outlet />`
-- [ ] Табы через `NavLink` на `/orders/new`, `/orders/in-progress`, `/orders/ready` с активным состоянием
-- [ ] Вывести в табах счётчики позиций из `useKitchenBoard().counts` (напр. «Новые · 3»)
-- [ ] Layout без клиентской нижней навигации (`BottomNav`), адаптирован под планшет
-- [ ] Обернуть layout провайдером `KitchenBoardProvider` (внутри `RequireRole`)
+- [x] Создать `src/layout/KitchenLayout.tsx` + `KitchenLayout.module.css` — контейнер с верхней панелью табов и `<Outlet />`
+- [x] Табы через `NavLink` на `/orders/new`, `/orders/in-progress`, `/orders/ready` с активным состоянием
+- [x] Вывести в табах счётчики позиций из `useKitchenBoard().counts` (напр. «Новые · 3»)
+- [x] Layout без клиентской нижней навигации (`BottomNav`), адаптирован под планшет
+- [x] Обернуть layout провайдером `KitchenBoardProvider` (внутри `RequireRole`)
 
 ### Task 5: Переиспользуемый OrderPositionsGrid
 - [ ] Создать `src/components/OrderPositionsGrid/OrderPositionsGrid.tsx` + `.module.css` + `index.ts`

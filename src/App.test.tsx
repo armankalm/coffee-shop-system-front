@@ -105,6 +105,24 @@ describe('App', () => {
     expect(markup).toContain('aria-label="Очистить корзину"')
   })
 
+  it('renders the kitchen orders route outside the customer bottom navigation', () => {
+    localStorage.setItem(
+      'drinkit.auth',
+      JSON.stringify({
+        accessToken: 'test-access',
+        refreshToken: 'test-refresh',
+        email: 'barista@example.com',
+        role: 'BARISTA',
+      }),
+    )
+
+    const markup = renderRoute('/orders/new')
+
+    expect(markup).toContain('aria-label="Статусы заказов"')
+    expect(markup).toContain('Новые · 0')
+    expect(markup).not.toContain('aria-label="РћСЃРЅРѕРІРЅР°СЏ РЅР°РІРёРіР°С†РёСЏ"')
+  })
+
   it('does not render protected screen content for unauthenticated visitors', () => {
     localStorage.removeItem('drinkit.auth')
 
