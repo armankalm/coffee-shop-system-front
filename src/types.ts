@@ -122,3 +122,14 @@ export type Order = {
   currency: CurrencyCode
   items: OrderItem[]
 }
+
+export type OrderPositionStatus = 'NEW' | 'IN_PROGRESS' | 'READY' | 'COMPLETED'
+
+export type OrderPosition = {
+  id: string
+  orderNumber: string
+  title: string
+  status: OrderPositionStatus
+  createdAt: string
+  comment?: string
+}
