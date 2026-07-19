@@ -22,11 +22,18 @@ export async function getPositions(): Promise<OrderPosition[]> {
   return positions.map(copyPosition)
 }
 
-export async function advancePositionStatus(id: string): Promise<OrderPosition> {
+export async function advancePositionStatus(
+  id: string,
+  expectedStatus?: OrderPositionStatus,
+): Promise<OrderPosition> {
   const currentPosition = positions.find((position) => position.id === id)
 
   if (!currentPosition) {
     throw new Error(`Order position ${id} was not found`)
+  }
+
+  if (expectedStatus && currentPosition.status !== expectedStatus) {
+    throw new Error(`Order position ${id} is ${currentPosition.status}, expected ${expectedStatus}`)
   }
 
   const updatedPosition: OrderPosition = {

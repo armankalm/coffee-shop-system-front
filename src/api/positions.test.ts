@@ -39,10 +39,10 @@ describe('positions api', () => {
       throw new Error('Expected at least one NEW mock position')
     }
 
-    const inProgressPosition = await positionsApi.advancePositionStatus(newPosition.id)
-    const readyPosition = await positionsApi.advancePositionStatus(newPosition.id)
-    const completedPosition = await positionsApi.advancePositionStatus(newPosition.id)
-    const repeatedCompletedPosition = await positionsApi.advancePositionStatus(newPosition.id)
+    const inProgressPosition = await positionsApi.advancePositionStatus(newPosition.id, 'NEW')
+    const readyPosition = await positionsApi.advancePositionStatus(newPosition.id, 'IN_PROGRESS')
+    const completedPosition = await positionsApi.advancePositionStatus(newPosition.id, 'READY')
+    const repeatedCompletedPosition = await positionsApi.advancePositionStatus(newPosition.id, 'COMPLETED')
     const positions = await positionsApi.getPositions()
     const persistedPosition = positions.find((position) => position.id === newPosition.id)
 
@@ -55,5 +55,17 @@ describe('positions api', () => {
 
   it('rejects unknown position ids', async () => {
     await expect(positionsApi.advancePositionStatus('missing-position')).rejects.toThrow('missing-position')
+  })
+
+  it('rejects stale expected statuses', async () => {
+    const newPosition = orderPositions.find((position) => position.status === 'NEW')
+
+    if (!newPosition) {
+      throw new Error('Expected at least one NEW mock position')
+    }
+
+    await positionsApi.advancePositionStatus(newPosition.id, 'NEW')
+
+    await expect(positionsApi.advancePositionStatus(newPosition.id, 'NEW')).rejects.toThrow('expected NEW')
   })
 })

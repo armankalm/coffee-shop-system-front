@@ -8,9 +8,11 @@ import { cleanupDocument, clickElement, renderIntoDocument } from '../../testUti
 import { KitchenOrdersScreen, type KitchenBoardScreenStatus } from './KitchenOrdersScreen'
 
 const mockKitchenBoard = vi.hoisted(() => ({
+  actionError: null as string | null,
   advancePosition: vi.fn(),
   error: null as string | null,
   loading: false,
+  pendingPositionIds: [] as string[],
   positionsByStatus: vi.fn(),
 }))
 
@@ -48,9 +50,11 @@ function positionsByStatus(status: OrderPositionStatus) {
 
 describe('KitchenOrdersScreen', () => {
   beforeEach(() => {
+    mockKitchenBoard.actionError = null
     mockKitchenBoard.advancePosition.mockReset()
     mockKitchenBoard.error = null
     mockKitchenBoard.loading = false
+    mockKitchenBoard.pendingPositionIds = []
     mockKitchenBoard.positionsByStatus.mockReset()
     mockKitchenBoard.positionsByStatus.mockImplementation(positionsByStatus)
   })
@@ -103,6 +107,27 @@ describe('KitchenOrdersScreen', () => {
     expect(mockKitchenBoard.positionsByStatus).not.toHaveBeenCalled()
   })
 
+  it('renders action errors without replacing loaded positions', () => {
+    mockKitchenBoard.actionError = 'Advance failed'
+
+    const markup = renderToStaticMarkup(<KitchenOrdersScreen statusFilter="NEW" />)
+
+    expect(markup).toContain('role="alert"')
+    expect(markup).toContain('Unable to update order')
+    expect(markup).toContain('Advance failed')
+    expect(markup).toContain('Cortado')
+    expect(mockKitchenBoard.positionsByStatus).toHaveBeenCalledWith('NEW')
+  })
+
+  it('disables cards with pending position updates', () => {
+    mockKitchenBoard.pendingPositionIds = ['pos-new']
+
+    const markup = renderToStaticMarkup(<KitchenOrdersScreen statusFilter="NEW" />)
+
+    expect(markup).toContain('aria-busy="true"')
+    expect(markup).toContain('disabled=""')
+  })
+
   it('wires rendered card clicks to advancePosition', async () => {
     const { container } = await renderIntoDocument(<KitchenOrdersScreen statusFilter="NEW" />)
     const card = container.querySelector('[data-position-id="pos-new"]')
@@ -110,6 +135,6 @@ describe('KitchenOrdersScreen', () => {
     expect(card).not.toBeNull()
     await clickElement(card!)
 
-    expect(mockKitchenBoard.advancePosition).toHaveBeenCalledWith('pos-new')
+    expect(mockKitchenBoard.advancePosition).toHaveBeenCalledWith('pos-new', 'NEW')
   })
 })

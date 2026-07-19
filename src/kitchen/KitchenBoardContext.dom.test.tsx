@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act } from 'react'
 
 import type { OrderPosition, OrderPositionStatus } from '../types'
 import { cleanupDocument, clickElement, renderIntoDocument, waitFor } from '../testUtils/dom'
@@ -34,18 +35,26 @@ const initialPositions: OrderPosition[] = [
 ]
 
 function KitchenBoardProbe() {
-  const { advancePosition, counts, error, loading, positions } = useKitchenBoard()
+  const { actionError, advancePosition, counts, error, loading, pendingPositionIds, positions } = useKitchenBoard()
   const firstPosition = positions[0]
+  const snapshot = [
+    positions.length,
+    String(loading),
+    error ?? 'null',
+    actionError ?? 'null',
+    pendingPositionIds.join(',') || 'none',
+    counts.NEW,
+    counts.IN_PROGRESS,
+    firstPosition?.status ?? 'none',
+  ].join(':')
 
   return (
     <div>
-      <output data-testid="snapshot">
-        {positions.length}:{String(loading)}:{error ?? 'null'}:{counts.NEW}:{counts.IN_PROGRESS}:{firstPosition?.status ?? 'none'}
-      </output>
+      <output data-testid="snapshot">{snapshot}</output>
       <button
         type="button"
         onClick={() => {
-          void advancePosition('pos-new')
+          void advancePosition('pos-new', 'NEW')
         }}
       >
         advance
@@ -74,7 +83,7 @@ describe('KitchenBoardProvider async behavior', () => {
     )
 
     await waitFor(() => {
-      expect(container.textContent).toContain('1:false:null:1:0:NEW')
+      expect(container.textContent).toContain('1:false:null:null:none:1:0:NEW')
     })
   })
 
@@ -88,7 +97,7 @@ describe('KitchenBoardProvider async behavior', () => {
     )
 
     await waitFor(() => {
-      expect(container.textContent).toContain('0:false:load failed:0:0:none')
+      expect(container.textContent).toContain('0:false:load failed:null:none:0:0:none')
     })
   })
 
@@ -103,7 +112,7 @@ describe('KitchenBoardProvider async behavior', () => {
     )
 
     await waitFor(() => {
-      expect(container.textContent).toContain('1:false:null:1:0:NEW')
+      expect(container.textContent).toContain('1:false:null:null:none:1:0:NEW')
     })
 
     const advanceButton = container.querySelector('button')
@@ -111,7 +120,60 @@ describe('KitchenBoardProvider async behavior', () => {
     await clickElement(advanceButton!)
 
     await waitFor(() => {
-      expect(container.textContent).toContain('1:false:advance failed:1:0:NEW')
+      expect(container.textContent).toContain('1:false:null:advance failed:none:1:0:NEW')
     })
+  })
+
+  it('ignores duplicate and stale advances for the same position', async () => {
+    const updatedPosition: OrderPosition = {
+      id: 'pos-new',
+      orderNumber: '#101',
+      title: 'Cortado',
+      status: 'IN_PROGRESS',
+      createdAt: '2026-07-19T08:00:00.000Z',
+    }
+    let resolveAdvance: (position: OrderPosition) => void = () => undefined
+
+    mockPositionsApi.getPositions.mockResolvedValue(initialPositions)
+    mockPositionsApi.advancePositionStatus.mockReturnValue(
+      new Promise<OrderPosition>((resolve) => {
+        resolveAdvance = resolve
+      }),
+    )
+
+    const { container } = await renderIntoDocument(
+      <KitchenBoardProvider>
+        <KitchenBoardProbe />
+      </KitchenBoardProvider>,
+    )
+
+    await waitFor(() => {
+      expect(container.textContent).toContain('1:false:null:null:none:1:0:NEW')
+    })
+
+    const advanceButton = container.querySelector('button')
+    expect(advanceButton).not.toBeNull()
+    await clickElement(advanceButton!)
+    await clickElement(advanceButton!)
+
+    expect(mockPositionsApi.advancePositionStatus).toHaveBeenCalledTimes(1)
+    expect(mockPositionsApi.advancePositionStatus).toHaveBeenCalledWith('pos-new', 'NEW')
+
+    await waitFor(() => {
+      expect(container.textContent).toContain('1:false:null:null:pos-new:0:1:IN_PROGRESS')
+    })
+
+    await act(async () => {
+      resolveAdvance(updatedPosition)
+      await Promise.resolve()
+    })
+
+    await waitFor(() => {
+      expect(container.textContent).toContain('1:false:null:null:none:0:1:IN_PROGRESS')
+    })
+
+    await clickElement(advanceButton!)
+
+    expect(mockPositionsApi.advancePositionStatus).toHaveBeenCalledTimes(1)
   })
 })

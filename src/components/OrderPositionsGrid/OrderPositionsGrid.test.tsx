@@ -51,6 +51,20 @@ describe('OrderPositionsGrid', () => {
     expect(markup).toContain('data-status="NEW"')
   })
 
+  it('disables cards with pending updates', () => {
+    const markup = renderToStaticMarkup(
+      <OrderPositionsGrid
+        statusFilter="READY"
+        positions={positions}
+        pendingPositionIds={['older-ready']}
+        onPositionClick={() => undefined}
+      />,
+    )
+
+    expect(markup).toContain('aria-busy="true"')
+    expect(markup).toContain('disabled=""')
+  })
+
   it('renders an empty state when there are no positions', () => {
     const markup = renderToStaticMarkup(
       <OrderPositionsGrid statusFilter="NEW" positions={[]} onPositionClick={() => undefined} />,

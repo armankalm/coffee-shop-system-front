@@ -1,6 +1,7 @@
 import { EmptyState, OrderPositionsGrid } from '../../components'
 import { useKitchenBoard } from '../../kitchen/KitchenBoardContext'
 import type { OrderPositionStatus } from '../../types'
+import styles from './KitchenOrdersScreen.module.css'
 
 export type KitchenBoardScreenStatus = Extract<OrderPositionStatus, 'NEW' | 'IN_PROGRESS' | 'READY'>
 
@@ -9,7 +10,7 @@ type KitchenOrdersScreenProps = {
 }
 
 export function KitchenOrdersScreen({ statusFilter }: KitchenOrdersScreenProps) {
-  const { advancePosition, error, loading, positionsByStatus } = useKitchenBoard()
+  const { actionError, advancePosition, error, loading, pendingPositionIds, positionsByStatus } = useKitchenBoard()
 
   if (loading) {
     return (
@@ -27,13 +28,25 @@ export function KitchenOrdersScreen({ statusFilter }: KitchenOrdersScreenProps) 
     )
   }
 
+  const positions = positionsByStatus(statusFilter)
+
   return (
-    <OrderPositionsGrid
-      statusFilter={statusFilter}
-      positions={positionsByStatus(statusFilter)}
-      onPositionClick={(id) => {
-        void advancePosition(id)
-      }}
-    />
+    <div className={styles.screen}>
+      {actionError ? (
+        <div className={styles.actionError} role="alert">
+          <span className={styles.actionTitle}>Unable to update order</span>
+          <span className={styles.actionDescription}>{actionError}</span>
+        </div>
+      ) : null}
+
+      <OrderPositionsGrid
+        statusFilter={statusFilter}
+        positions={positions}
+        pendingPositionIds={pendingPositionIds}
+        onPositionClick={(id) => {
+          void advancePosition(id, statusFilter)
+        }}
+      />
+    </div>
   )
 }

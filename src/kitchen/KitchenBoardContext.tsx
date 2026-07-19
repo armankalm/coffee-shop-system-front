@@ -1,4 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 
 import { advancePositionStatus, getPositions, nextStatus } from '../api/positions'
 import type { OrderPosition, OrderPositionStatus } from '../types'
@@ -9,7 +18,9 @@ type KitchenBoardContextValue = {
   positions: OrderPosition[]
   loading: boolean
   error: string | null
-  advancePosition: (id: string) => Promise<void>
+  actionError: string | null
+  pendingPositionIds: readonly string[]
+  advancePosition: (id: string, expectedStatus?: OrderPositionStatus) => Promise<void>
   positionsByStatus: (status: OrderPositionStatus) => OrderPosition[]
   counts: PositionCounts
 }
@@ -49,15 +60,37 @@ function getErrorMessage(error: unknown) {
 
 export function KitchenBoardProvider({ children }: { children: ReactNode }) {
   const [positions, setPositions] = useState<OrderPosition[]>([])
+  const positionsRef = useRef<OrderPosition[]>([])
+  const pendingPositionIdsRef = useRef<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [pendingPositionIds, setPendingPositionIds] = useState<string[]>([])
+
+  const updatePositions = useCallback((nextPositions: OrderPosition[]) => {
+    positionsRef.current = nextPositions
+    setPositions(nextPositions)
+  }, [])
+
+  const setPositionPending = useCallback((id: string, pending: boolean) => {
+    const nextPendingPositionIds = new Set(pendingPositionIdsRef.current)
+
+    if (pending) {
+      nextPendingPositionIds.add(id)
+    } else {
+      nextPendingPositionIds.delete(id)
+    }
+
+    pendingPositionIdsRef.current = nextPendingPositionIds
+    setPendingPositionIds([...nextPendingPositionIds])
+  }, [])
 
   useEffect(() => {
     let cancelled = false
 
     getPositions()
       .then((nextPositions) => {
-        if (!cancelled) setPositions(nextPositions)
+        if (!cancelled) updatePositions(nextPositions)
       })
       .catch((loadError) => {
         if (!cancelled) setError(getErrorMessage(loadError))
@@ -69,32 +102,43 @@ export function KitchenBoardProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [updatePositions])
 
   const advancePosition = useCallback(
-    async (id: string) => {
-      const previousPosition = positions.find((position) => position.id === id)
+    async (id: string, expectedStatus?: OrderPositionStatus) => {
+      if (pendingPositionIdsRef.current.has(id)) {
+        return
+      }
+
+      const previousPosition = positionsRef.current.find((position) => position.id === id)
 
       if (!previousPosition) {
         return
       }
 
-      setError(null)
-      setPositions((currentPositions) => advancePositionOptimistically(currentPositions, id))
+      if (expectedStatus && previousPosition.status !== expectedStatus) {
+        return
+      }
+
+      setPositionPending(id, true)
+      setActionError(null)
+      updatePositions(advancePositionOptimistically(positionsRef.current, id))
 
       try {
-        const updatedPosition = await advancePositionStatus(id)
-        setPositions((currentPositions) =>
-          currentPositions.map((position) => (position.id === id ? updatedPosition : position)),
+        const updatedPosition = await advancePositionStatus(id, previousPosition.status)
+        updatePositions(
+          positionsRef.current.map((position) => (position.id === id ? updatedPosition : position)),
         )
       } catch (advanceError) {
-        setPositions((currentPositions) =>
-          currentPositions.map((position) => (position.id === id ? previousPosition : position)),
+        updatePositions(
+          positionsRef.current.map((position) => (position.id === id ? previousPosition : position)),
         )
-        setError(getErrorMessage(advanceError))
+        setActionError(getErrorMessage(advanceError))
+      } finally {
+        setPositionPending(id, false)
       }
     },
-    [positions],
+    [setPositionPending, updatePositions],
   )
 
   const counts = useMemo(() => countPositionsByStatus(positions), [positions])
@@ -109,11 +153,13 @@ export function KitchenBoardProvider({ children }: { children: ReactNode }) {
       positions,
       loading,
       error,
+      actionError,
+      pendingPositionIds,
       advancePosition,
       positionsByStatus,
       counts,
     }),
-    [positions, loading, error, advancePosition, positionsByStatus, counts],
+    [positions, loading, error, actionError, pendingPositionIds, advancePosition, positionsByStatus, counts],
   )
 
   return <KitchenBoardContext.Provider value={value}>{children}</KitchenBoardContext.Provider>

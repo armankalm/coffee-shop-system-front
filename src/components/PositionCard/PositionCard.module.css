@@ -36,6 +36,17 @@
   transform: scale(0.99);
 }
 
+.card:disabled {
+  cursor: wait;
+  opacity: 0.64;
+}
+
+.card:disabled:hover {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--surface);
+  box-shadow: none;
+}
+
 .body {
   display: grid;
   min-width: 0;
