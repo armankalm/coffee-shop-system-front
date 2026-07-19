@@ -16,7 +16,7 @@ function formatMoney(amount: number) {
 export function CartScreen() {
   const navigate = useNavigate()
   const { shop } = useShop()
-  const { lines, updateQuantity, clear } = useCart()
+  const { lines, updateQuantity, clearShop } = useCart()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -39,7 +39,7 @@ export function CartScreen() {
           quantity: line.quantity,
         })),
       })
-      clear()
+      clearShop(shop.id)
       navigate(`/order/${order.id}`)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Не удалось оформить заказ. Попробуйте ещё раз.')
@@ -60,7 +60,9 @@ export function CartScreen() {
         <button
           className={styles.roundIconButton}
           type="button"
-          onClick={clear}
+          onClick={() => {
+            if (shop) clearShop(shop.id)
+          }}
           disabled={shopLines.length === 0}
           aria-label="Очистить корзину"
         >

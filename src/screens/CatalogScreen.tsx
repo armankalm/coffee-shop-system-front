@@ -42,8 +42,9 @@ export function CatalogScreen() {
     getProducts(shop.id)
       .then((data) => {
         if (cancelled) return
+        const availableProducts = data.filter((product) => product.available)
         setState({ status: 'ready', products: data })
-        setActiveCategoryCode((current) => current ?? data[0]?.category ?? null)
+        setActiveCategoryCode((current) => current ?? availableProducts[0]?.category ?? null)
       })
       .catch((err) => {
         if (!cancelled) {
@@ -59,7 +60,14 @@ export function CatalogScreen() {
     }
   }, [shop])
 
-  const products = useMemo(() => (state.status === 'ready' ? state.products : []), [state])
+  const products = useMemo(
+    () => (state.status === 'ready' ? state.products.filter((product) => product.available) : []),
+    [state],
+  )
+  const availableFavoriteProducts = useMemo(
+    () => favoriteProducts.filter((product) => product.available),
+    [favoriteProducts],
+  )
 
   const categories = useMemo<CategoryOption[]>(() => {
     const seen = new Map<string, string>()
@@ -67,16 +75,16 @@ export function CatalogScreen() {
       if (!seen.has(product.category)) seen.set(product.category, product.categoryNameRu)
     }
     const productCategories = Array.from(seen, ([code, title]) => ({ code, title }))
-    if (favoriteProducts.length === 0) return productCategories
+    if (availableFavoriteProducts.length === 0) return productCategories
     return [{ code: FAVORITES_CATEGORY_CODE, title: 'Избранное' }, ...productCategories]
-  }, [products, favoriteProducts.length])
+  }, [products, availableFavoriteProducts.length])
 
   const activeCategory = categories.find((category) => category.code === activeCategoryCode) ?? categories[0]
 
   const visibleProducts = useMemo(() => {
-    if (activeCategory?.code === FAVORITES_CATEGORY_CODE) return favoriteProducts
+    if (activeCategory?.code === FAVORITES_CATEGORY_CODE) return availableFavoriteProducts
     return products.filter((product) => product.category === activeCategory?.code)
-  }, [products, favoriteProducts, activeCategory?.code])
+  }, [products, availableFavoriteProducts, activeCategory?.code])
 
   if (!shop) {
     return <Navigate to="/locations" replace />

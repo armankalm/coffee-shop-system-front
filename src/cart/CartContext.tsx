@@ -22,10 +22,45 @@ type CartContextValue = {
   addItem: (product: ProductDto, toppingIds: number[], quantity: number, shopId: number) => void
   updateQuantity: (lineId: string, quantity: number) => void
   removeItem: (lineId: string) => void
+  clearShop: (shopId: number) => void
   clear: () => void
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
+
+function isPositiveInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0
+}
+
+function isNonNegativeNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
+}
+
+function isStringOrNull(value: unknown): value is string | null {
+  return typeof value === 'string' || value === null
+}
+
+function isCartLine(line: unknown): line is CartLine {
+  if (typeof line !== 'object' || line === null) return false
+
+  const candidate = line as Partial<CartLine>
+
+  return (
+    typeof candidate.id === 'string' &&
+    candidate.id.length > 0 &&
+    isPositiveInteger(candidate.shopId) &&
+    isPositiveInteger(candidate.productId) &&
+    typeof candidate.productName === 'string' &&
+    candidate.productName.length > 0 &&
+    isStringOrNull(candidate.imagePath) &&
+    isNonNegativeNumber(candidate.basePrice) &&
+    Array.isArray(candidate.toppingIds) &&
+    candidate.toppingIds.every(isPositiveInteger) &&
+    typeof candidate.toppingsLabel === 'string' &&
+    isNonNegativeNumber(candidate.toppingsPrice) &&
+    isPositiveInteger(candidate.quantity)
+  )
+}
 
 function readStoredLines(): CartLine[] {
   const raw = localStorage.getItem(STORAGE_KEY)
@@ -35,12 +70,7 @@ function readStoredLines(): CartLine[] {
     const parsed = JSON.parse(raw) as unknown
     if (!Array.isArray(parsed)) return []
 
-    return parsed.filter(
-      (line): line is CartLine =>
-        typeof line === 'object' &&
-        line !== null &&
-        typeof (line as CartLine).shopId === 'number',
-    )
+    return parsed.filter(isCartLine)
   } catch {
     return []
   }
@@ -61,8 +91,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     () => ({
       lines,
       addItem: (product, toppingIds, quantity, shopId) => {
-        const id = lineKey(shopId, product.id, toppingIds)
-        const toppings = product.availableToppings.filter((topping) => toppingIds.includes(topping.id))
+        if (!product.available || !isPositiveInteger(quantity) || !isPositiveInteger(shopId)) return
+
+        const requestedToppingIds = new Set(toppingIds)
+        const toppings = product.availableToppings.filter((topping) => requestedToppingIds.has(topping.id))
+        const validToppingIds = toppings.map((topping) => topping.id)
+        const id = lineKey(shopId, product.id, validToppingIds)
         const toppingsPrice = toppings.reduce((sum, topping) => sum + topping.price, 0)
         const toppingsLabel = toppings.map((topping) => topping.name).join(', ')
 
@@ -80,7 +114,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                   productName: product.name,
                   imagePath: product.imagePath,
                   basePrice: product.basePrice,
-                  toppingIds,
+                  toppingIds: validToppingIds,
                   toppingsLabel,
                   toppingsPrice,
                   quantity,
@@ -97,6 +131,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       },
       removeItem: (lineId) => {
         setLines((currentLines) => currentLines.filter((line) => line.id !== lineId))
+      },
+      clearShop: (shopId) => {
+        setLines((currentLines) => currentLines.filter((line) => line.shopId !== shopId))
       },
       clear: () => {
         setLines([])

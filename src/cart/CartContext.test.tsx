@@ -25,13 +25,30 @@ const secondProduct: ProductDto = {
   basePrice: 1800,
 }
 
+const toppingProduct: ProductDto = {
+  ...baseProduct,
+  id: 12,
+  name: 'Mocha',
+  availableToppings: [
+    {
+      id: 1,
+      name: 'Vanilla',
+      type: 'SYRUP',
+      typeNameRu: 'Syrup',
+      price: 200,
+      incompatibleWithIds: [],
+    },
+  ],
+}
+
 function CartProbe() {
-  const { addItem, lines } = useCart()
+  const { addItem, clearShop, lines } = useCart()
 
   return (
     <div>
       <output>
-        {lines.map((line) => `${line.shopId}:${line.productId}:${line.quantity}`).join('|') || 'empty'}
+        {lines.map((line) => `${line.shopId}:${line.productId}:${line.quantity}:${line.toppingIds.join(',') || 'none'}`).join('|') ||
+          'empty'}
       </output>
       <button
         type="button"
@@ -49,6 +66,17 @@ function CartProbe() {
         }}
       >
         other shop
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          addItem(toppingProduct, [1, 999], 1, 1)
+        }}
+      >
+        invalid topping
+      </button>
+      <button type="button" onClick={() => clearShop(1)}>
+        clear shop
       </button>
     </div>
   )
@@ -73,7 +101,7 @@ describe('CartProvider', () => {
     await clickElement(container.querySelector('button')!)
 
     await waitFor(() => {
-      expect(container.textContent).toContain('1:10:1|1:11:2')
+      expect(container.textContent).toContain('1:10:1:none|1:11:2:none')
     })
   })
 
@@ -89,7 +117,72 @@ describe('CartProvider', () => {
     await clickElement(buttons[1]!)
 
     await waitFor(() => {
-      expect(container.textContent).toContain('1:10:1|1:11:2|2:10:1')
+      expect(container.textContent).toContain('1:10:1:none|1:11:2:none|2:10:1:none')
     })
+  })
+
+  it('stores only toppings available for the selected product', async () => {
+    const { container } = await renderIntoDocument(
+      <CartProvider>
+        <CartProbe />
+      </CartProvider>,
+    )
+    const buttons = container.querySelectorAll('button')
+
+    await clickElement(buttons[2]!)
+
+    await waitFor(() => {
+      expect(container.textContent).toContain('1:12:1:1')
+      expect(container.textContent).not.toContain('999')
+    })
+  })
+
+  it('clears only lines for the requested shop', async () => {
+    const { container } = await renderIntoDocument(
+      <CartProvider>
+        <CartProbe />
+      </CartProvider>,
+    )
+    const buttons = container.querySelectorAll('button')
+
+    await clickElement(buttons[0]!)
+    await clickElement(buttons[1]!)
+    await clickElement(buttons[3]!)
+
+    await waitFor(() => {
+      expect(container.textContent).toContain('2:10:1:none')
+      expect(container.textContent).not.toContain('1:10')
+      expect(container.textContent).not.toContain('1:11')
+    })
+  })
+
+  it('drops malformed persisted cart lines', async () => {
+    localStorage.setItem(
+      'drinkit.cart',
+      JSON.stringify([
+        { id: 'bad', shopId: 1 },
+        {
+          id: '1:10:',
+          shopId: 1,
+          productId: 10,
+          productName: 'Iced latte',
+          imagePath: null,
+          basePrice: 2600,
+          toppingIds: [],
+          toppingsLabel: '',
+          toppingsPrice: 0,
+          quantity: 1,
+        },
+      ]),
+    )
+
+    const { container } = await renderIntoDocument(
+      <CartProvider>
+        <CartProbe />
+      </CartProvider>,
+    )
+
+    expect(container.textContent).toContain('1:10:1:none')
+    expect(container.textContent).not.toContain('bad')
   })
 })

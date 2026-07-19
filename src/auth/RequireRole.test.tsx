@@ -72,6 +72,17 @@ describe('RequireRole', () => {
     expect(renderProtectedRoute()).not.toContain('Kitchen board')
   })
 
+  it('ignores malformed stored sessions', () => {
+    localStorage.setItem(
+      'drinkit.auth',
+      JSON.stringify({
+        role: 'BARISTA',
+      }),
+    )
+
+    expect(renderProtectedRoute()).not.toContain('Kitchen board')
+  })
+
   it('allows backend-provided permissions to grant access without changing the UI guard', () => {
     storeSession('USER', [KITCHEN_BOARD_PERMISSION])
 

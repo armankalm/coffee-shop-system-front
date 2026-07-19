@@ -94,6 +94,17 @@ describe('App async routes', () => {
         description: null,
         availableToppings: [],
       },
+      {
+        id: 11,
+        name: 'Sold out raf',
+        category: 'coffee',
+        categoryNameRu: 'Coffee',
+        basePrice: 3000,
+        available: false,
+        imagePath: null,
+        description: null,
+        availableToppings: [],
+      },
     ])
 
     const { container } = await renderRoute('/catalog')
@@ -101,6 +112,7 @@ describe('App async routes', () => {
     await waitFor(() => {
       expect(container.textContent).toContain('Iced latte')
       expect(container.textContent).toContain('Coffee')
+      expect(container.textContent).not.toContain('Sold out raf')
     })
   })
 

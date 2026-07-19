@@ -14,6 +14,10 @@ const mockOrdersApi = vi.hoisted(() => ({
 
 vi.mock('../api/orders', () => mockOrdersApi)
 
+function readStoredCart() {
+  return JSON.parse(localStorage.getItem('drinkit.cart') ?? '[]') as Array<{ shopId: number; productId: number }>
+}
+
 describe('CartScreen', () => {
   beforeEach(() => {
     localStorage.clear()
@@ -90,6 +94,40 @@ describe('CartScreen', () => {
         shopId: 1,
         items: [{ productId: 10, toppingIds: [], quantity: 1 }],
       })
+    })
+
+    await waitFor(() => {
+      expect(readStoredCart()).toEqual([
+        expect.objectContaining({
+          shopId: 2,
+          productId: 11,
+        }),
+      ])
+    })
+  })
+
+  it('clears only the selected shop cart lines from the trash button', async () => {
+    const { container } = await renderIntoDocument(
+      <MemoryRouter>
+        <ShopProvider>
+          <CartProvider>
+            <CartScreen />
+          </CartProvider>
+        </ShopProvider>
+      </MemoryRouter>,
+    )
+
+    const trashButton = container.querySelector('header button')
+    expect(trashButton).not.toBeNull()
+    await clickElement(trashButton!)
+
+    await waitFor(() => {
+      expect(readStoredCart()).toEqual([
+        expect.objectContaining({
+          shopId: 2,
+          productId: 11,
+        }),
+      ])
     })
   })
 })

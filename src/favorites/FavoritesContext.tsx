@@ -11,15 +11,21 @@ type FavoritesContextValue = {
   toggleFavorite: (product: ProductDto) => void
 }
 
+type FavoritesState = {
+  sessionKey: string | null
+  products: ProductDto[]
+}
+
 const FavoritesContext = createContext<FavoritesContextValue | null>(null)
 const emptyFavoriteProducts: ProductDto[] = []
 
 export function FavoritesProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth()
-  const [favoriteProducts, setFavoriteProducts] = useState<ProductDto[]>([])
+  const sessionKey = session?.accessToken ?? null
+  const [favoritesState, setFavoritesState] = useState<FavoritesState>({ sessionKey: null, products: [] })
 
   useEffect(() => {
-    if (!session) {
+    if (!sessionKey) {
       return
     }
 
@@ -27,37 +33,64 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
     getFavorites()
       .then((favorites) => {
-        if (!cancelled) setFavoriteProducts(favorites.map((favorite) => favorite.product))
+        if (!cancelled) {
+          setFavoritesState({ sessionKey, products: favorites.map((favorite) => favorite.product) })
+        }
       })
       .catch(() => {
-        if (!cancelled) setFavoriteProducts([])
+        if (!cancelled) setFavoritesState({ sessionKey, products: [] })
       })
 
     return () => {
       cancelled = true
     }
-  }, [session])
+  }, [sessionKey])
 
-  const visibleFavoriteProducts = session ? favoriteProducts : emptyFavoriteProducts
+  const visibleFavoriteProducts =
+    sessionKey && favoritesState.sessionKey === sessionKey ? favoritesState.products : emptyFavoriteProducts
 
   const toggleFavorite = useCallback(
     (product: ProductDto) => {
+      if (!sessionKey) return
+
       const isCurrentlyFavorite = visibleFavoriteProducts.some((entry) => entry.id === product.id)
 
       if (isCurrentlyFavorite) {
-        setFavoriteProducts((current) => current.filter((entry) => entry.id !== product.id))
+        setFavoritesState((current) => {
+          const products = current.sessionKey === sessionKey ? current.products : visibleFavoriteProducts
+          return { sessionKey, products: products.filter((entry) => entry.id !== product.id) }
+        })
         removeFavorite(product.id).catch(() => {
-          setFavoriteProducts((current) => (current.some((entry) => entry.id === product.id) ? current : [...current, product]))
+          setFavoritesState((current) =>
+            current.sessionKey === sessionKey
+              ? {
+                  sessionKey,
+                  products: current.products.some((entry) => entry.id === product.id)
+                    ? current.products
+                    : [...current.products, product],
+                }
+              : current,
+          )
         })
         return
       }
 
-      setFavoriteProducts((current) => [...current, product])
+      setFavoritesState((current) => {
+        const products = current.sessionKey === sessionKey ? current.products : visibleFavoriteProducts
+        return {
+          sessionKey,
+          products: products.some((entry) => entry.id === product.id) ? products : [...products, product],
+        }
+      })
       addFavorite(product.id).catch(() => {
-        setFavoriteProducts((current) => current.filter((entry) => entry.id !== product.id))
+        setFavoritesState((current) =>
+          current.sessionKey === sessionKey
+            ? { sessionKey, products: current.products.filter((entry) => entry.id !== product.id) }
+            : current,
+        )
       })
     },
-    [visibleFavoriteProducts],
+    [sessionKey, visibleFavoriteProducts],
   )
 
   const favoriteProductIds = useMemo(

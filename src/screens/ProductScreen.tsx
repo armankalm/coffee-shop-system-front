@@ -12,9 +12,9 @@ import heroFallback from '../assets/hero.png'
 import styles from './Screens.module.css'
 
 type LoadState =
-  | { status: 'loading' }
-  | { status: 'error'; message: string }
-  | { status: 'ready'; product: ProductDto }
+  | { status: 'loading'; productId: string | undefined }
+  | { status: 'error'; productId: string | undefined; message: string }
+  | { status: 'ready'; productId: string; product: ProductDto }
 
 function formatMoney(amount: number) {
   return `${amount.toLocaleString('ru-RU')} ₸`
@@ -27,22 +27,31 @@ export function ProductScreen() {
   const { isFavorite, toggleFavorite } = useFavorites()
   const { shop } = useShop()
 
-  const [state, setState] = useState<LoadState>({ status: 'loading' })
-  const [selectedToppingIds, setSelectedToppingIds] = useState<number[]>([])
+  const [state, setState] = useState<LoadState>(() => ({ status: 'loading', productId }))
+  const [selectedToppings, setSelectedToppings] = useState<{ productId: string | undefined; ids: number[] }>(() => ({
+    productId,
+    ids: [],
+  }))
+  const selectedToppingIds = useMemo(
+    () => (selectedToppings.productId === productId ? selectedToppings.ids : []),
+    [productId, selectedToppings.ids, selectedToppings.productId],
+  )
 
   useEffect(() => {
     if (!productId) return
 
     let cancelled = false
+    const requestedProductId = productId
 
-    getProductById(Number(productId))
+    getProductById(Number(requestedProductId))
       .then((data) => {
-        if (!cancelled) setState({ status: 'ready', product: data })
+        if (!cancelled) setState({ status: 'ready', productId: requestedProductId, product: data })
       })
       .catch((err) => {
         if (!cancelled) {
           setState({
             status: 'error',
+            productId: requestedProductId,
             message: err instanceof ApiError ? err.message : 'Не удалось загрузить товар.',
           })
         }
@@ -53,16 +62,24 @@ export function ProductScreen() {
     }
   }, [productId])
 
-  const product = state.status === 'ready' ? state.product : null
+  const product = state.status === 'ready' && state.productId === productId ? state.product : null
+
+  const validSelectedToppingIds = useMemo(() => {
+    if (!product) return []
+
+    const availableToppingIds = new Set(product.availableToppings.map((topping) => topping.id))
+    return selectedToppingIds.filter((toppingId) => availableToppingIds.has(toppingId))
+  }, [product, selectedToppingIds])
 
   const toppingsPrice = useMemo(() => {
     if (!product) return 0
+    const selectedIds = new Set(validSelectedToppingIds)
     return product.availableToppings
-      .filter((topping) => selectedToppingIds.includes(topping.id))
+      .filter((topping) => selectedIds.has(topping.id))
       .reduce((sum, topping) => sum + topping.price, 0)
-  }, [product, selectedToppingIds])
+  }, [product, validSelectedToppingIds])
 
-  if (state.status === 'loading') {
+  if (state.status === 'loading' || state.productId !== productId) {
     return (
       <section className={`${styles.screen} ${styles.productScreen}`}>
         <p className={styles.productDescription}>Загружаем товар…</p>
@@ -86,22 +103,24 @@ export function ProductScreen() {
     const topping = product.availableToppings.find((entry) => entry.id === toppingId)
     if (!topping) return
 
-    setSelectedToppingIds((current) => {
-      if (current.includes(toppingId)) {
-        return current.filter((id) => id !== toppingId)
+    setSelectedToppings((current) => {
+      const currentIds = current.productId === productId ? current.ids : []
+
+      if (currentIds.includes(toppingId)) {
+        return { productId, ids: currentIds.filter((id) => id !== toppingId) }
       }
-      const withoutIncompatible = current.filter((id) => !topping.incompatibleWithIds.includes(id))
-      return [...withoutIncompatible, toppingId]
+      const withoutIncompatible = currentIds.filter((id) => !topping.incompatibleWithIds.includes(id))
+      return { productId, ids: [...withoutIncompatible, toppingId] }
     })
   }
 
   function handleAddToCart() {
-    if (!product) return
+    if (!product || !product.available) return
     if (!shop) {
       navigate('/locations')
       return
     }
-    addItem(product, selectedToppingIds, 1, shop.id)
+    addItem(product, validSelectedToppingIds, 1, shop.id)
     navigate('/cart')
   }
 
@@ -180,9 +199,10 @@ export function ProductScreen() {
           className={styles.productAddButton}
           onClick={handleAddToCart}
           type="button"
+          disabled={!product.available}
           aria-label={`Добавить ${product.name} в корзину`}
         >
-          + {formatMoney(totalPrice)}
+          {product.available ? `+ ${formatMoney(totalPrice)}` : 'Unavailable'}
         </button>
       </div>
     </section>
