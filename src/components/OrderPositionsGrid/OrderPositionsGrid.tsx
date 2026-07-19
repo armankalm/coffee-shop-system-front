@@ -1,4 +1,5 @@
 import type { OrderPosition, OrderPositionStatus } from '../../types'
+import { PositionCard } from '../PositionCard'
 import styles from './OrderPositionsGrid.module.css'
 
 export type OrderPositionsGridProps = {
@@ -19,20 +20,11 @@ export function OrderPositionsGrid({
       data-status-filter={statusFilter}
     >
       {positions.map((position) => (
-        <button
-          className={styles.item}
-          data-position-id={position.id}
-          data-status={position.status}
+        <PositionCard
           key={position.id}
-          onClick={() => onPositionClick(position.id)}
-          type="button"
-        >
-          <span className={styles.title}>{position.title}</span>
-          <span className={styles.meta}>
-            <span>{position.orderNumber}</span>
-            <span>{position.status}</span>
-          </span>
-        </button>
+          position={position}
+          onPositionClick={onPositionClick}
+        />
       ))}
     </section>
   )

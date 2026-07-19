@@ -53,12 +53,12 @@
 - [x] Отфильтрованный и FIFO-отсортированный список отдаётся снаружи (из Context), Grid только рендерит
 
 ### Task 6: Карточка позиции (PositionCard)
-- [ ] Создать `src/components/PositionCard/PositionCard.tsx` + `.module.css` + `index.ts`
-- [ ] Крупный жирный заголовок (`title`), мета снизу: `orderNumber` + таймер «прошло с createdAt»
-- [ ] Таймер: хук `useElapsedTime(createdAt)` с обновлением раз в ~30 сек (или мемоизированный интервал на уровне грида)
-- [ ] Ховер-эффект: плавная смена фона/тени (CSS transition), крупная кликабельная зона
-- [ ] Комментарий (`comment`): выделять фоновым цветом/иконкой внимания, если задан
-- [ ] Клик по карточке вызывает `onPositionClick(id)`
+- [x] Создать `src/components/PositionCard/PositionCard.tsx` + `.module.css` + `index.ts`
+- [x] Крупный жирный заголовок (`title`), мета снизу: `orderNumber` + таймер «прошло с createdAt»
+- [x] Таймер: хук `useElapsedTime(createdAt)` с обновлением раз в ~30 сек (или мемоизированный интервал на уровне грида)
+- [x] Ховер-эффект: плавная смена фона/тени (CSS transition), крупная кликабельная зона
+- [x] Комментарий (`comment`): выделять фоновым цветом/иконкой внимания, если задан
+- [x] Клик по карточке вызывает `onPositionClick(id)`
 
 ### Task 7: Три страницы (роуты)
 - [ ] Создать `src/screens/kitchen/NewOrdersScreen.tsx` — `statusFilter=NEW`, клик → `advancePosition` (в `IN_PROGRESS`)
