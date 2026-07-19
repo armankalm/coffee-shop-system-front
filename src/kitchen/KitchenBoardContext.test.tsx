@@ -72,6 +72,32 @@ describe('KitchenBoardContext', () => {
     expect(advancedPositions.find((position) => position.id === 'ready-newer')?.status).toBe('READY')
   })
 
+  it('advances a position through the kitchen chain and removes it from the previous queue', () => {
+    const inProgressPositions = advancePositionOptimistically(testPositions, 'new-position')
+    const readyPositions = advancePositionOptimistically(inProgressPositions, 'new-position')
+    const completedPositions = advancePositionOptimistically(readyPositions, 'new-position')
+
+    expect(selectPositionsByStatus(inProgressPositions, 'NEW')).toHaveLength(0)
+    expect(selectPositionsByStatus(inProgressPositions, 'IN_PROGRESS').map((position) => position.id)).toEqual([
+      'new-position',
+    ])
+
+    expect(selectPositionsByStatus(readyPositions, 'IN_PROGRESS')).toHaveLength(0)
+    expect(selectPositionsByStatus(readyPositions, 'READY').map((position) => position.id)).toEqual([
+      'ready-older',
+      'new-position',
+      'ready-newer',
+    ])
+
+    expect(selectPositionsByStatus(completedPositions, 'READY').map((position) => position.id)).toEqual([
+      'ready-older',
+      'ready-newer',
+    ])
+    expect(selectPositionsByStatus(completedPositions, 'COMPLETED').map((position) => position.id)).toEqual([
+      'new-position',
+    ])
+  })
+
   it('provides initial loading state before client-side loading resolves', () => {
     const markup = renderToStaticMarkup(
       <KitchenBoardProvider>

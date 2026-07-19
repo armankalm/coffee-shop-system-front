@@ -85,7 +85,7 @@
 - [x] Проверить редирект не-админа при попытке зайти на `/orders/new`
 
 ### Task 11: Тесты и финальная проверка
-- [ ] Тест: `advancePosition` переводит статус по цепочке и убирает позицию из старого статуса
-- [ ] Тест: `positionsByStatus` фильтрует и сортирует FIFO
-- [ ] Тест: `OrderPositionsGrid` рендерит `EmptyState` при пустом списке
-- [ ] Прогнать `npm run lint`, `npm run build`, `npm test` — всё зелёное
+- [x] Тест: `advancePosition` переводит статус по цепочке и убирает позицию из старого статуса
+- [x] Тест: `positionsByStatus` фильтрует и сортирует FIFO
+- [x] Тест: `OrderPositionsGrid` рендерит `EmptyState` при пустом списке
+- [x] Прогнать `npm run lint`, `npm run build`, `npm test` — всё зелёное
