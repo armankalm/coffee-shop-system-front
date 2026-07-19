@@ -60,7 +60,13 @@ async function refreshAccessToken(): Promise<string | null> {
       })
       if (!response.ok) return null
 
-      const auth = (await response.json()) as { accessToken: string; refreshToken: string; email: string; role: string }
+      const auth = (await response.json()) as {
+        accessToken: string
+        refreshToken: string
+        email: string
+        role: string
+        permissions?: string[]
+      }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(auth))
       return auth.accessToken
     } catch {

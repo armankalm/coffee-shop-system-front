@@ -5,6 +5,7 @@ export type AuthResponse = {
   refreshToken: string
   email: string
   role: string
+  permissions?: string[]
 }
 
 export function requestCode(email: string) {

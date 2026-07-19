@@ -33,11 +33,11 @@
 - [x] Обернуть провайдером админ-роуты (не всё приложение)
 
 ### Task 3: Гейтинг по праву (RequireRole)
-- [ ] Создать `src/auth/permissions.ts`: маппинг `role → permissions[]` по данным бэка (`USER: orders:read/create/cancel`; `BARISTA: orders:read/update-status/print`; `MANAGER`/`ADMIN`: `orders:*` и др.), хелпер `hasPermission(role, permission)` с поддержкой wildcard (`orders:*` покрывает `orders:update-status`)
-- [ ] Определить константу `KITCHEN_BOARD_PERMISSION = 'orders:update-status'`
-- [ ] Создать `src/auth/RequireRole.tsx` — принимает `permission: string`, использует `useAuth()`, при отсутствии права делает `<Navigate>` на главную
-- [ ] Убедиться, что `RequireRole` монтируется внутри `RequireAuth` (сначала авторизация, потом право)
-- [ ] Примечание: сессия сейчас несёт только `role: string` (в `AuthResponse`/`AuthSession`), массива permissions нет — поэтому право выводится из роли на клиенте. Если бэк начнёт отдавать `permissions`, `hasPermission` переключается на них без изменения UI.
+- [x] Создать `src/auth/permissions.ts`: маппинг `role → permissions[]` по данным бэка (`USER: orders:read/create/cancel`; `BARISTA: orders:read/update-status/print`; `MANAGER`/`ADMIN`: `orders:*` и др.), хелпер `hasPermission(role, permission)` с поддержкой wildcard (`orders:*` покрывает `orders:update-status`)
+- [x] Определить константу `KITCHEN_BOARD_PERMISSION = 'orders:update-status'`
+- [x] Создать `src/auth/RequireRole.tsx` — принимает `permission: string`, использует `useAuth()`, при отсутствии права делает `<Navigate>` на главную
+- [x] Убедиться, что `RequireRole` монтируется внутри `RequireAuth` (сначала авторизация, потом право)
+- [x] Примечание: сессия сейчас несёт только `role: string` (в `AuthResponse`/`AuthSession`), массива permissions нет — поэтому право выводится из роли на клиенте. Если бэк начнёт отдавать `permissions`, `hasPermission` переключается на них без изменения UI.
 
 ### Task 4: Админ-layout с табами
 - [ ] Создать `src/layout/KitchenLayout.tsx` + `KitchenLayout.module.css` — контейнер с верхней панелью табов и `<Outlet />`

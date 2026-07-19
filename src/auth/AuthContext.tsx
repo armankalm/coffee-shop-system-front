@@ -9,6 +9,7 @@ export type AuthSession = {
   refreshToken: string
   email: string
   role: string
+  permissions?: string[]
 }
 
 type AuthContextValue = {
@@ -42,6 +43,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           refreshToken: auth.refreshToken,
           email: auth.email,
           role: auth.role,
+        }
+        if (auth.permissions) {
+          nextSession.permissions = auth.permissions
         }
         localStorage.setItem(STORAGE_KEY, JSON.stringify(nextSession))
         setSession(nextSession)
