@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 
 import { RequireAuth } from './auth/RequireAuth'
 import { RequireRole } from './auth/RequireRole'
@@ -14,6 +14,9 @@ import {
   OrderStatusScreen,
   ProductScreen,
   ProfileScreen,
+  InProgressOrdersScreen,
+  NewOrdersScreen,
+  ReadyOrdersScreen,
 } from './screens'
 
 function App() {
@@ -35,7 +38,12 @@ function App() {
       </Route>
       <Route element={<RequireAuth />}>
         <Route element={<RequireRole permission={KITCHEN_BOARD_PERMISSION} />}>
-          <Route path="orders/*" element={<KitchenLayout />} />
+          <Route path="orders" element={<KitchenLayout />}>
+            <Route index element={<Navigate to="new" replace />} />
+            <Route path="new" element={<NewOrdersScreen />} />
+            <Route path="in-progress" element={<InProgressOrdersScreen />} />
+            <Route path="ready" element={<ReadyOrdersScreen />} />
+          </Route>
         </Route>
       </Route>
     </Routes>
