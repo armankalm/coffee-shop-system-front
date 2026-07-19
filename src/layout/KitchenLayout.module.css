@@ -24,12 +24,14 @@
 }
 
 .eyebrow {
+  display: inline-block;
   margin: 0 0 6px;
   color: #f2c572;
   font-size: 13px;
   font-weight: 800;
   line-height: 1.2;
   text-transform: uppercase;
+  text-decoration: none;
 }
 
 .title {

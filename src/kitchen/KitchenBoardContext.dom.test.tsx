@@ -9,6 +9,8 @@ import { cleanupDocument, clickElement, renderIntoDocument, waitFor } from '../t
 const mockPositionsApi = vi.hoisted(() => ({
   advancePositionStatus: vi.fn(),
   getPositions: vi.fn(),
+  openKitchenBoardStream: vi.fn(() => ({ addEventListener: vi.fn(), close: vi.fn() })),
+  toOrderPosition: vi.fn(),
   nextStatus: (status: OrderPositionStatus) => {
     const transitions: Record<OrderPositionStatus, OrderPositionStatus> = {
       NEW: 'IN_PROGRESS',
@@ -21,6 +23,12 @@ const mockPositionsApi = vi.hoisted(() => ({
 }))
 
 vi.mock('../api/positions', () => mockPositionsApi)
+
+// The kitchen board resolves a shop for its SSE stream via /me when none is
+// stored; keep it offline in tests (no assigned shops → stream is skipped).
+vi.mock('../api/user', () => ({
+  getCurrentUser: vi.fn().mockResolvedValue({ assignedShops: [], coffeeShopId: null }),
+}))
 
 import { KitchenBoardProvider, useKitchenBoard } from './KitchenBoardContext'
 

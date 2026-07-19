@@ -13,8 +13,13 @@ export type OrderItemDto = {
 export type OrderDto = {
   id: number
   userId: number
+  customerName: string
   shopId: number
   shopName: string
+  /** Per-shop daily order number (null for legacy orders). */
+  dailyNumber: number | null
+  /** Local business date the daily number belongs to (ISO date). */
+  orderDate: string | null
   status: string
   statusNameRu: string
   total: number
@@ -30,6 +35,7 @@ export type CreateOrderItemRequest = {
 
 export type CreateOrderRequest = {
   shopId: number
+  customerName?: string
   items: CreateOrderItemRequest[]
 }
 

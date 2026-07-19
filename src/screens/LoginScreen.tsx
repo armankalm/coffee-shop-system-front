@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { requestCode, verifyCode } from '../api/auth'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
+import { defaultLandingPath } from '../auth/permissions'
 import { Button } from '../components'
 import styles from './Screens.module.css'
 import loginStyles from './LoginScreen.module.css'
@@ -22,7 +23,13 @@ export function LoginScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const redirectTo = (location.state as { from?: Location } | null)?.from?.pathname ?? '/locations'
+  const requestedPath = (location.state as { from?: Location } | null)?.from?.pathname ?? null
+
+  function resolveRedirect(role: string) {
+    // Honour an explicit destination the user was redirected away from.
+    if (requestedPath) return requestedPath
+    return defaultLandingPath(role)
+  }
 
   async function handleRequestCode(event: FormEvent) {
     event.preventDefault()
@@ -50,7 +57,7 @@ export function LoginScreen() {
     try {
       const auth = await verifyCode(email, code)
       login(auth)
-      navigate(redirectTo, { replace: true })
+      navigate(resolveRedirect(auth.role), { replace: true })
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Неверный код. Попробуйте ещё раз.')
     } finally {

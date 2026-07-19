@@ -9,8 +9,42 @@ import {
   type ReactNode,
 } from 'react'
 
-import { advancePositionStatus, getPositions, nextStatus } from '../api/positions'
+import {
+  advancePositionStatus,
+  getPositions,
+  nextStatus,
+  openKitchenBoardStream,
+  toOrderPosition,
+  type OrderItemBoardDto,
+} from '../api/positions'
+import { getCurrentUser } from '../api/user'
 import type { OrderPosition, OrderPositionStatus } from '../types'
+
+const SELECTED_SHOP_KEY = 'drinkit.staff.shopId'
+
+function readSelectedShopId(): number | null {
+  const raw = localStorage.getItem(SELECTED_SHOP_KEY)
+  if (!raw) return null
+  const parsed = Number(raw)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+/**
+ * The shop whose kitchen board to stream: the staff-selected shop if set,
+ * otherwise the first shop assigned to the current user. This keeps live
+ * updates working even if the barista opened /orders/* without visiting /staff.
+ */
+async function resolveKitchenShopId(): Promise<number | null> {
+  const stored = readSelectedShopId()
+  if (stored != null) return stored
+
+  try {
+    const me = await getCurrentUser()
+    return me.assignedShops?.[0]?.id ?? me.coffeeShopId ?? null
+  } catch {
+    return null
+  }
+}
 
 export type PositionCounts = Record<OrderPositionStatus, number>
 
@@ -101,6 +135,38 @@ export function KitchenBoardProvider({ children }: { children: ReactNode }) {
 
     return () => {
       cancelled = true
+    }
+  }, [updatePositions])
+
+  // Live updates: subscribe to the shop's kitchen board over SSE so new orders
+  // (e.g. placed at the POS) and status changes appear without a reload.
+  useEffect(() => {
+    let source: EventSource | null = null
+    let closed = false
+
+    resolveKitchenShopId().then((shopId) => {
+      if (closed || shopId == null) return
+
+      source = openKitchenBoardStream(shopId)
+
+      source.addEventListener('items', (event) => {
+        // Skip while an optimistic advance is in flight, so the server snapshot
+        // doesn't briefly overwrite the pending card before it's confirmed.
+        if (pendingPositionIdsRef.current.size > 0) return
+
+        try {
+          const items = JSON.parse((event as MessageEvent).data) as OrderItemBoardDto[]
+          updatePositions(items.map(toOrderPosition))
+          setLoading(false)
+        } catch {
+          // Ignore malformed frames; the next snapshot will reconcile.
+        }
+      })
+    })
+
+    return () => {
+      closed = true
+      source?.close()
     }
   }, [updatePositions])
 

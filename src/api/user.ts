@@ -11,6 +11,7 @@ export type UserDto = {
   coffeeShopId: number | null
   coffeeShopName: string | null
   coffeeShop: CoffeeShopDto | null
+  assignedShops?: CoffeeShopDto[] | null
 }
 
 export type UpdateProfileRequest = {

@@ -15,6 +15,9 @@ import {
   ProductScreen,
   ProfileScreen,
   KitchenOrdersScreen,
+  OrderBoardScreen,
+  StaffHomeScreen,
+  PosOrderScreen,
 } from './screens'
 
 function App() {
@@ -36,12 +39,15 @@ function App() {
       </Route>
       <Route element={<RequireAuth />}>
         <Route element={<RequireRole permission={KITCHEN_BOARD_PERMISSION} />}>
+          <Route path="staff" element={<StaffHomeScreen />} />
+          <Route path="staff/pos" element={<PosOrderScreen />} />
           <Route path="orders" element={<KitchenLayout />}>
             <Route index element={<Navigate to="new" replace />} />
             <Route path="new" element={<KitchenOrdersScreen statusFilter="NEW" />} />
             <Route path="in-progress" element={<KitchenOrdersScreen statusFilter="IN_PROGRESS" />} />
             <Route path="ready" element={<KitchenOrdersScreen statusFilter="READY" />} />
           </Route>
+          <Route path="board/:shopId" element={<OrderBoardScreen />} />
         </Route>
       </Route>
     </Routes>

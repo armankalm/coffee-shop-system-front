@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 
 import { classNames } from '../components/classNames'
 import {
@@ -33,7 +33,9 @@ export function KitchenLayoutShell({ counts }: { counts: PositionCounts }) {
       <div className={styles.shell}>
         <header className={styles.header}>
           <div>
-            <p className={styles.eyebrow}>Бариста</p>
+            <Link className={styles.eyebrow} to="/staff">
+              ← Рабочее место
+            </Link>
             <h1 className={styles.title}>Заказы</h1>
           </div>
 

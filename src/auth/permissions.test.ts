@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { KITCHEN_BOARD_PERMISSION, getRolePermissions, hasPermission } from './permissions'
+import {
+  KITCHEN_BOARD_PERMISSION,
+  defaultLandingPath,
+  getRolePermissions,
+  hasPermission,
+} from './permissions'
 
 describe('permissions', () => {
   it('grants kitchen-board access to baristas by exact permission', () => {
@@ -23,5 +28,13 @@ describe('permissions', () => {
 
   it('normalizes role names before reading mapped permissions', () => {
     expect(getRolePermissions(' barista ')).toContain(KITCHEN_BOARD_PERMISSION)
+  })
+
+  it('routes staff to the workspace and customers to locations after login', () => {
+    expect(defaultLandingPath('BARISTA')).toBe('/staff')
+    expect(defaultLandingPath('MANAGER')).toBe('/staff')
+    expect(defaultLandingPath('ADMIN')).toBe('/staff')
+    expect(defaultLandingPath('USER')).toBe('/locations')
+    expect(defaultLandingPath(null)).toBe('/locations')
   })
 })

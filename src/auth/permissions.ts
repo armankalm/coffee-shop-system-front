@@ -30,6 +30,15 @@ function permissionMatches(grantedPermission: Permission, requestedPermission: P
   return requestedPermission.startsWith(grantedPermission.slice(0, -1))
 }
 
+/**
+ * Where a user should land right after login when no explicit destination was
+ * requested: staff (those who can advance orders) go to their workspace,
+ * regular customers to the shop locations screen.
+ */
+export function defaultLandingPath(role: string | null | undefined) {
+  return hasPermission(role, KITCHEN_BOARD_PERMISSION) ? '/staff' : '/locations'
+}
+
 export function hasPermission(
   role: string | null | undefined,
   permission: Permission,

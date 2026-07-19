@@ -1,7 +1,18 @@
 const API_ORIGIN = (import.meta.env.VITE_API_ORIGIN ?? 'http://localhost:8080').replace(/\/$/, '')
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? `${API_ORIGIN}/api`
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? `${API_ORIGIN}/api`
 
 const STORAGE_KEY = 'drinkit.auth'
+
+export function readAccessTokenFromStorage(): string | null {
+  const raw = localStorage.getItem(STORAGE_KEY)
+  if (!raw) return null
+
+  try {
+    return (JSON.parse(raw) as { accessToken?: string }).accessToken ?? null
+  } catch {
+    return null
+  }
+}
 
 export class ApiError extends Error {
   status: number
