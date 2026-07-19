@@ -1,6 +1,7 @@
-import { Route, Routes } from 'react-router-dom'
+import { Outlet, Route, Routes } from 'react-router-dom'
 
 import { RequireAuth } from './auth/RequireAuth'
+import { KitchenBoardProvider } from './kitchen/KitchenBoardContext'
 import { AppLayout } from './layout/AppLayout'
 import {
   CartScreen,
@@ -12,6 +13,14 @@ import {
   ProductScreen,
   ProfileScreen,
 } from './screens'
+
+function KitchenBoardRouteScope() {
+  return (
+    <KitchenBoardProvider>
+      <Outlet />
+    </KitchenBoardProvider>
+  )
+}
 
 function App() {
   return (
@@ -27,6 +36,7 @@ function App() {
           <Route path="product/:productId" element={<ProductScreen />} />
           <Route path="cart" element={<CartScreen />} />
           <Route path="order/:orderId" element={<OrderStatusScreen />} />
+          <Route path="orders/*" element={<KitchenBoardRouteScope />} />
           <Route path="*" element={<LocationsScreen />} />
         </Route>
       </Route>

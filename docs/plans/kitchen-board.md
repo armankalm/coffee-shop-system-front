@@ -24,13 +24,13 @@
 - [x] Экспортировать хелпер `nextStatus(status)` для переиспользования в UI и Context
 
 ### Task 2: KitchenBoardContext (общий стейт)
-- [ ] Создать `src/kitchen/KitchenBoardContext.tsx` по образцу `CartContext.tsx`
-- [ ] Хранить `positions: OrderPosition[]`, загружать через `getPositions()` при монтировании (loading/error стейт)
-- [ ] Реализовать `advancePosition(id)`: оптимистичное обновление статуса + вызов `advancePositionStatus(id)`, откат при ошибке
-- [ ] Добавить селектор `positionsByStatus(status)` с сортировкой FIFO (от старых к новым по `createdAt`)
-- [ ] Добавить счётчики `counts: Record<status, number>` для табов
-- [ ] Экспортировать хук `useKitchenBoard()` с проверкой провайдера
-- [ ] Обернуть провайдером админ-роуты (не всё приложение)
+- [x] Создать `src/kitchen/KitchenBoardContext.tsx` по образцу `CartContext.tsx`
+- [x] Хранить `positions: OrderPosition[]`, загружать через `getPositions()` при монтировании (loading/error стейт)
+- [x] Реализовать `advancePosition(id)`: оптимистичное обновление статуса + вызов `advancePositionStatus(id)`, откат при ошибке
+- [x] Добавить селектор `positionsByStatus(status)` с сортировкой FIFO (от старых к новым по `createdAt`)
+- [x] Добавить счётчики `counts: Record<status, number>` для табов
+- [x] Экспортировать хук `useKitchenBoard()` с проверкой провайдера
+- [x] Обернуть провайдером админ-роуты (не всё приложение)
 
 ### Task 3: Гейтинг по праву (RequireRole)
 - [ ] Создать `src/auth/permissions.ts`: маппинг `role → permissions[]` по данным бэка (`USER: orders:read/create/cancel`; `BARISTA: orders:read/update-status/print`; `MANAGER`/`ADMIN`: `orders:*` и др.), хелпер `hasPermission(role, permission)` с поддержкой wildcard (`orders:*` покрывает `orders:update-status`)
