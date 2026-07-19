@@ -21,10 +21,11 @@ export function CartScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const total = lines.reduce((sum, line) => sum + (line.basePrice + line.toppingsPrice) * line.quantity, 0)
+  const shopLines = shop ? lines.filter((line) => line.shopId === shop.id) : []
+  const total = shopLines.reduce((sum, line) => sum + (line.basePrice + line.toppingsPrice) * line.quantity, 0)
 
   async function handleCheckout() {
-    if (!shop || lines.length === 0) return
+    if (!shop || shopLines.length === 0) return
 
     setIsSubmitting(true)
     setError(null)
@@ -32,7 +33,7 @@ export function CartScreen() {
     try {
       const order = await createOrder({
         shopId: shop.id,
-        items: lines.map((line) => ({
+        items: shopLines.map((line) => ({
           productId: line.productId,
           toppingIds: line.toppingIds,
           quantity: line.quantity,
@@ -60,7 +61,7 @@ export function CartScreen() {
           className={styles.roundIconButton}
           type="button"
           onClick={clear}
-          disabled={lines.length === 0}
+          disabled={shopLines.length === 0}
           aria-label="Очистить корзину"
         >
           🗑
@@ -71,11 +72,11 @@ export function CartScreen() {
         Корзина
       </h1>
 
-      {lines.length === 0 ? (
+      {shopLines.length === 0 ? (
         <p className={styles.muted}>Корзина пуста. Добавьте что-нибудь из каталога.</p>
       ) : (
         <div className={styles.list}>
-          {lines.map((line) => (
+          {shopLines.map((line) => (
             <article className={styles.cartCard} key={line.id}>
               <div className={styles.cartImageFrame}>
                 <img
@@ -115,7 +116,7 @@ export function CartScreen() {
         <button
           className={styles.payButton}
           type="button"
-          disabled={lines.length === 0 || !shop || isSubmitting}
+          disabled={shopLines.length === 0 || !shop || isSubmitting}
           onClick={handleCheckout}
         >
           {isSubmitting ? 'Оформляем…' : 'Оформить заказ'}

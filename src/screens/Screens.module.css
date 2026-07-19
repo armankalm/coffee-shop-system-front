@@ -838,7 +838,7 @@
   left: max(var(--safe-left), calc((100vw - 430px) / 2));
   z-index: 4;
   display: grid;
-  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
   align-items: center;
   margin-top: auto;
@@ -891,6 +891,7 @@
 }
 
 .productAddButton {
+  width: 100%;
   min-width: 0;
   min-height: 56px;
   display: inline-flex;

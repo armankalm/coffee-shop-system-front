@@ -1,8 +1,11 @@
+// @vitest-environment jsdom
+
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { OrderPosition } from '../../types'
-import { createPositionClickHandler, formatElapsedTime, PositionCard } from './index'
+import { cleanupDocument, clickElement, renderIntoDocument } from '../../testUtils/dom'
+import { formatElapsedTime, PositionCard } from './index'
 
 const position: OrderPosition = {
   id: 'position-104-1',
@@ -14,7 +17,8 @@ const position: OrderPosition = {
 }
 
 describe('PositionCard', () => {
-  afterEach(() => {
+  afterEach(async () => {
+    await cleanupDocument()
     vi.useRealTimers()
   })
 
@@ -45,10 +49,15 @@ describe('PositionCard', () => {
     expect(formatElapsedTime('2026-07-17T08:20:00.000Z', nowMs)).toBe('2 д 1 ч')
   })
 
-  it('calls onPositionClick with the card id', () => {
+  it('calls onPositionClick with the card id', async () => {
     const onPositionClick = vi.fn()
+    const { container } = await renderIntoDocument(
+      <PositionCard position={position} onPositionClick={onPositionClick} />,
+    )
+    const card = container.querySelector('[data-position-id="position-104-1"]')
 
-    createPositionClickHandler(position.id, onPositionClick)()
+    expect(card).not.toBeNull()
+    await clickElement(card!)
 
     expect(onPositionClick).toHaveBeenCalledWith('position-104-1')
   })

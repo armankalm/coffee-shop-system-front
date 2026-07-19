@@ -1,32 +1,75 @@
-# React + TypeScript + Vite
+# drinkit copy front
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React/Vite frontend for a Drinkit-style coffee ordering app. The app includes customer ordering screens and a protected kitchen board for barista/admin order-position handling.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Email code login with stored access/refresh tokens.
+- Location and coffee-shop selection.
+- Product catalog by selected shop, product detail, toppings, favorites, and cart checkout.
+- Profile, profile editing, order history, repeat-order flow, and order-status polling.
+- Kitchen board routes for new, in-progress, and ready order positions with role/permission gating.
 
-## React Compiler
+## Routes
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `/login` - email code authentication.
+- `/locations` - city/shop selection.
+- `/catalog` - selected-shop catalog.
+- `/product/:productId` - product detail and add-to-cart.
+- `/cart` - current selected-shop cart and checkout.
+- `/order/:orderId` - order status and cancellation.
+- `/profile` - user profile and order history.
+- `/profile/edit` - profile editing.
+- `/orders/new` - kitchen board for new positions.
+- `/orders/in-progress` - kitchen board for positions in progress.
+- `/orders/ready` - kitchen board for ready positions.
 
-## Expanding the Oxlint configuration
+## Configuration
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+Create `.env` from `.env.example`:
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```sh
+VITE_API_BASE_URL=http://localhost:8080/api
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Optional:
+
+```sh
+VITE_API_ORIGIN=http://localhost:8080
+```
+
+`VITE_API_ORIGIN` is used to resolve relative image paths. When omitted, it defaults to `http://localhost:8080`.
+
+## Backend API
+
+The frontend expects the backend endpoints used by `src/api/*`:
+
+- Auth: request code, verify code, refresh token.
+- Shops: cities, shops by city, shop search, shop details.
+- Products: products by shop/category and product details.
+- Favorites: list/add/remove favorite products.
+- Orders: create order, user orders, order details, cancel order.
+- Users: current user and profile update.
+
+Authenticated requests send a bearer access token. On `401`, the API client attempts one refresh-token retry, stores the refreshed session, and clears the session if refresh fails.
+
+## Authentication
+
+Sessions are stored under `drinkit.auth` in `localStorage`. Backend-provided `permissions` are used when present; otherwise permissions are derived from the user role.
+
+Kitchen board access requires `orders:update-status`. `BARISTA` has that exact permission, while `MANAGER` and `ADMIN` are granted through `orders:*`. `USER` cannot access `/orders/*`.
+
+Development builds may display and auto-fill a backend `devCode` from the request-code response. Production builds ignore `devCode`.
+
+## Development
+
+```sh
+npm install
+npm run dev
+npm run lint
+npm test
+npm run build
+npm run preview
+```
+
+Stack: React 19, Vite, TypeScript, React Router, CSS Modules, framer-motion, Vitest, ESLint.

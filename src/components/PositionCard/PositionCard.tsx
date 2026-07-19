@@ -3,7 +3,6 @@ import type { ButtonHTMLAttributes } from 'react'
 import type { OrderPosition } from '../../types'
 import { classNames } from '../classNames'
 import { useElapsedTime } from './elapsedTime'
-import { createPositionClickHandler } from './positionCardClick'
 import styles from './PositionCard.module.css'
 
 export type PositionCardProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'onClick'> & {
@@ -25,7 +24,7 @@ export function PositionCard({
       className={classNames(styles.card, className)}
       data-position-id={position.id}
       data-status={position.status}
-      onClick={createPositionClickHandler(position.id, onPositionClick)}
+      onClick={() => onPositionClick(position.id)}
       type={type}
       {...props}
     >

@@ -31,8 +31,9 @@ export function LoginScreen() {
 
     try {
       const response = await requestCode(email)
-      setDevCode(response.devCode ?? null)
-      setCode(response.devCode ?? '')
+      const nextDevCode = import.meta.env.DEV ? (response.devCode ?? null) : null
+      setDevCode(nextDevCode)
+      setCode(nextDevCode ?? '')
       setStep('code')
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Не удалось отправить код. Попробуйте ещё раз.')

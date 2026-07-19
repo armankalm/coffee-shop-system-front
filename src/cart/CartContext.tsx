@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import type { ProductDto } from '../api/products'
 
@@ -6,6 +6,7 @@ const STORAGE_KEY = 'drinkit.cart'
 
 export type CartLine = {
   id: string
+  shopId: number
   productId: number
   productName: string
   imagePath: string | null
@@ -18,7 +19,7 @@ export type CartLine = {
 
 type CartContextValue = {
   lines: CartLine[]
-  addItem: (product: ProductDto, toppingIds: number[], quantity: number) => void
+  addItem: (product: ProductDto, toppingIds: number[], quantity: number, shopId: number) => void
   updateQuantity: (lineId: string, quantity: number) => void
   removeItem: (lineId: string) => void
   clear: () => void
@@ -31,65 +32,74 @@ function readStoredLines(): CartLine[] {
   if (!raw) return []
 
   try {
-    return JSON.parse(raw) as CartLine[]
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return []
+
+    return parsed.filter(
+      (line): line is CartLine =>
+        typeof line === 'object' &&
+        line !== null &&
+        typeof (line as CartLine).shopId === 'number',
+    )
   } catch {
     return []
   }
 }
 
-function lineKey(productId: number, toppingIds: number[]) {
-  return `${productId}:${[...toppingIds].sort((a, b) => a - b).join(',')}`
+function lineKey(shopId: number, productId: number, toppingIds: number[]) {
+  return `${shopId}:${productId}:${[...toppingIds].sort((a, b) => a - b).join(',')}`
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>(() => readStoredLines())
 
-  function persist(nextLines: CartLine[]) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextLines))
-    setLines(nextLines)
-  }
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(lines))
+  }, [lines])
 
   const value = useMemo<CartContextValue>(
     () => ({
       lines,
-      addItem: (product, toppingIds, quantity) => {
-        const id = lineKey(product.id, toppingIds)
+      addItem: (product, toppingIds, quantity, shopId) => {
+        const id = lineKey(shopId, product.id, toppingIds)
         const toppings = product.availableToppings.filter((topping) => toppingIds.includes(topping.id))
         const toppingsPrice = toppings.reduce((sum, topping) => sum + topping.price, 0)
         const toppingsLabel = toppings.map((topping) => topping.name).join(', ')
 
-        const existing = lines.find((line) => line.id === id)
-        const nextLines = existing
-          ? lines.map((line) => (line.id === id ? { ...line, quantity: line.quantity + quantity } : line))
-          : [
-              ...lines,
-              {
-                id,
-                productId: product.id,
-                productName: product.name,
-                imagePath: product.imagePath,
-                basePrice: product.basePrice,
-                toppingIds,
-                toppingsLabel,
-                toppingsPrice,
-                quantity,
-              },
-            ]
+        setLines((currentLines) => {
+          const existing = currentLines.find((line) => line.id === id)
 
-        persist(nextLines)
+          return existing
+            ? currentLines.map((line) => (line.id === id ? { ...line, quantity: line.quantity + quantity } : line))
+            : [
+                ...currentLines,
+                {
+                  id,
+                  shopId,
+                  productId: product.id,
+                  productName: product.name,
+                  imagePath: product.imagePath,
+                  basePrice: product.basePrice,
+                  toppingIds,
+                  toppingsLabel,
+                  toppingsPrice,
+                  quantity,
+                },
+              ]
+        })
       },
       updateQuantity: (lineId, quantity) => {
         if (quantity <= 0) {
-          persist(lines.filter((line) => line.id !== lineId))
+          setLines((currentLines) => currentLines.filter((line) => line.id !== lineId))
           return
         }
-        persist(lines.map((line) => (line.id === lineId ? { ...line, quantity } : line)))
+        setLines((currentLines) => currentLines.map((line) => (line.id === lineId ? { ...line, quantity } : line)))
       },
       removeItem: (lineId) => {
-        persist(lines.filter((line) => line.id !== lineId))
+        setLines((currentLines) => currentLines.filter((line) => line.id !== lineId))
       },
       clear: () => {
-        persist([])
+        setLines([])
       },
     }),
     [lines],

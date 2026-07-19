@@ -14,9 +14,7 @@ import {
   OrderStatusScreen,
   ProductScreen,
   ProfileScreen,
-  InProgressOrdersScreen,
-  NewOrdersScreen,
-  ReadyOrdersScreen,
+  KitchenOrdersScreen,
 } from './screens'
 
 function App() {
@@ -40,9 +38,9 @@ function App() {
         <Route element={<RequireRole permission={KITCHEN_BOARD_PERMISSION} />}>
           <Route path="orders" element={<KitchenLayout />}>
             <Route index element={<Navigate to="new" replace />} />
-            <Route path="new" element={<NewOrdersScreen />} />
-            <Route path="in-progress" element={<InProgressOrdersScreen />} />
-            <Route path="ready" element={<ReadyOrdersScreen />} />
+            <Route path="new" element={<KitchenOrdersScreen statusFilter="NEW" />} />
+            <Route path="in-progress" element={<KitchenOrdersScreen statusFilter="IN_PROGRESS" />} />
+            <Route path="ready" element={<KitchenOrdersScreen statusFilter="READY" />} />
           </Route>
         </Route>
       </Route>

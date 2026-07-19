@@ -30,44 +30,36 @@ export function ProductCard({
   ...props
 }: ProductCardProps) {
   return (
-    <button className={classNames(styles.card, className)} type={type} {...props}>
-      <span className={styles.imageFrame}>
-        <img className={styles.image} src={imageSrc} alt={imageAlt} draggable={false} />
-        {badge ? (
-          <Badge className={styles.badge} tone={badge.tone}>
-            {badge.label}
-          </Badge>
-        ) : null}
-        {onFavoriteToggle ? (
-          <span
-            aria-label={isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'}
-            aria-pressed={isFavorite}
-            className={classNames(styles.favoriteButton, isFavorite ? styles.favoriteActive : undefined)}
-            onClick={(event) => {
-              event.stopPropagation()
-              onFavoriteToggle()
-            }}
-            onKeyDown={(event) => {
-              if (event.key !== 'Enter' && event.key !== ' ') return
-              event.preventDefault()
-              event.stopPropagation()
-              onFavoriteToggle()
-            }}
-            role="button"
-            tabIndex={0}
-          >
-            {isFavorite ? '♥' : '♡'}
-          </span>
-        ) : null}
-      </span>
-      <span className={styles.title}>{title}</span>
-      {description ? <span className={styles.description}>{description}</span> : null}
-      <span className={styles.footer}>
-        <span className={styles.price}>{price}</span>
-        <span className={styles.arrow} aria-hidden="true">
-          &gt;
+    <article className={classNames(styles.card, className)}>
+      <button className={styles.openButton} type={type} {...props}>
+        <span className={styles.imageFrame}>
+          <img className={styles.image} src={imageSrc} alt={imageAlt} draggable={false} />
+          {badge ? (
+            <Badge className={styles.badge} tone={badge.tone}>
+              {badge.label}
+            </Badge>
+          ) : null}
         </span>
-      </span>
-    </button>
+        <span className={styles.title}>{title}</span>
+        {description ? <span className={styles.description}>{description}</span> : null}
+        <span className={styles.footer}>
+          <span className={styles.price}>{price}</span>
+          <span className={styles.arrow} aria-hidden="true">
+            &gt;
+          </span>
+        </span>
+      </button>
+      {onFavoriteToggle ? (
+        <button
+          aria-label={isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'}
+          aria-pressed={isFavorite}
+          className={classNames(styles.favoriteButton, isFavorite ? styles.favoriteActive : undefined)}
+          onClick={onFavoriteToggle}
+          type="button"
+        >
+          {isFavorite ? '♥' : '♡'}
+        </button>
+      ) : null}
+    </article>
   )
 }

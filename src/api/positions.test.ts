@@ -1,18 +1,28 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { orderPositions } from '../mocks'
-import { advancePositionStatus, getPositions, nextStatus } from './positions'
+import type { OrderPosition } from '../types'
+
+type PositionsApi = typeof import('./positions')
+
+let positionsApi: PositionsApi
+let orderPositions: OrderPosition[]
 
 describe('positions api', () => {
+  beforeEach(async () => {
+    vi.resetModules()
+    positionsApi = await import('./positions')
+    orderPositions = (await import('../mocks')).orderPositions
+  })
+
   it('maps position statuses to the next kitchen-board step', () => {
-    expect(nextStatus('NEW')).toBe('IN_PROGRESS')
-    expect(nextStatus('IN_PROGRESS')).toBe('READY')
-    expect(nextStatus('READY')).toBe('COMPLETED')
-    expect(nextStatus('COMPLETED')).toBe('COMPLETED')
+    expect(positionsApi.nextStatus('NEW')).toBe('IN_PROGRESS')
+    expect(positionsApi.nextStatus('IN_PROGRESS')).toBe('READY')
+    expect(positionsApi.nextStatus('READY')).toBe('COMPLETED')
+    expect(positionsApi.nextStatus('COMPLETED')).toBe('COMPLETED')
   })
 
   it('loads copied mock positions', async () => {
-    const positions = await getPositions()
+    const positions = await positionsApi.getPositions()
 
     expect(positions).toHaveLength(orderPositions.length)
     expect(orderPositions.length).toBeGreaterThanOrEqual(8)
@@ -29,11 +39,11 @@ describe('positions api', () => {
       throw new Error('Expected at least one NEW mock position')
     }
 
-    const inProgressPosition = await advancePositionStatus(newPosition.id)
-    const readyPosition = await advancePositionStatus(newPosition.id)
-    const completedPosition = await advancePositionStatus(newPosition.id)
-    const repeatedCompletedPosition = await advancePositionStatus(newPosition.id)
-    const positions = await getPositions()
+    const inProgressPosition = await positionsApi.advancePositionStatus(newPosition.id)
+    const readyPosition = await positionsApi.advancePositionStatus(newPosition.id)
+    const completedPosition = await positionsApi.advancePositionStatus(newPosition.id)
+    const repeatedCompletedPosition = await positionsApi.advancePositionStatus(newPosition.id)
+    const positions = await positionsApi.getPositions()
     const persistedPosition = positions.find((position) => position.id === newPosition.id)
 
     expect(inProgressPosition.status).toBe('IN_PROGRESS')
@@ -44,6 +54,6 @@ describe('positions api', () => {
   })
 
   it('rejects unknown position ids', async () => {
-    await expect(advancePositionStatus('missing-position')).rejects.toThrow('missing-position')
+    await expect(positionsApi.advancePositionStatus('missing-position')).rejects.toThrow('missing-position')
   })
 })

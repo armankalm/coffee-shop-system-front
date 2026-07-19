@@ -9,6 +9,7 @@ import type { UserDto } from '../api/user'
 import { getCurrentUser } from '../api/user'
 import { useAuth } from '../auth/AuthContext'
 import { useCart } from '../cart/CartContext'
+import { useShop } from '../shop/ShopContext'
 import heroFallback from '../assets/hero.png'
 import loginStyles from './LoginScreen.module.css'
 import styles from './Screens.module.css'
@@ -37,6 +38,7 @@ export function ProfileScreen() {
   const { logout } = useAuth()
   const navigate = useNavigate()
   const { addItem } = useCart()
+  const { shop } = useShop()
   const [state, setState] = useState<LoadState>({ status: 'loading' })
   const [repeatingOrderId, setRepeatingOrderId] = useState<number | null>(null)
   const [repeatError, setRepeatError] = useState<string | null>(null)
@@ -86,6 +88,12 @@ export function ProfileScreen() {
     setRepeatError(null)
     setRepeatingOrderId(order.id)
 
+    if (!shop || shop.id !== order.shopId) {
+      setRepeatError('Select the same coffee shop before repeating this order.')
+      setRepeatingOrderId(null)
+      return
+    }
+
     try {
       const results = await Promise.all(
         order.items.map(async (item) => {
@@ -106,6 +114,7 @@ export function ProfileScreen() {
           product,
           item.toppings.map((topping) => topping.id),
           item.quantity,
+          shop.id,
         )
       }
 

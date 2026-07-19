@@ -1,4 +1,2 @@
-export { InProgressOrdersScreen } from './InProgressOrdersScreen'
-export { NewOrdersScreen } from './NewOrdersScreen'
-export { ReadyOrdersScreen } from './ReadyOrdersScreen'
-
+export { KitchenOrdersScreen } from './KitchenOrdersScreen'
+export type { KitchenBoardScreenStatus } from './KitchenOrdersScreen'

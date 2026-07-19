@@ -1,19 +1,16 @@
+// @vitest-environment jsdom
+
 import { renderToStaticMarkup } from 'react-dom/server'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { OrderPosition, OrderPositionStatus } from '../../types'
-import {
-  InProgressOrdersScreen,
-  NewOrdersScreen,
-  ReadyOrdersScreen,
-} from './index'
-import {
-  getKitchenOrdersGridProps,
-  type KitchenBoardScreenStatus,
-} from './kitchenOrdersGridProps'
+import { cleanupDocument, clickElement, renderIntoDocument } from '../../testUtils/dom'
+import { KitchenOrdersScreen, type KitchenBoardScreenStatus } from './KitchenOrdersScreen'
 
 const mockKitchenBoard = vi.hoisted(() => ({
   advancePosition: vi.fn(),
+  error: null as string | null,
+  loading: false,
   positionsByStatus: vi.fn(),
 }))
 
@@ -49,23 +46,31 @@ function positionsByStatus(status: OrderPositionStatus) {
   return positions.filter((position) => position.status === status)
 }
 
-describe('kitchen order screens', () => {
+describe('KitchenOrdersScreen', () => {
   beforeEach(() => {
     mockKitchenBoard.advancePosition.mockReset()
+    mockKitchenBoard.error = null
+    mockKitchenBoard.loading = false
     mockKitchenBoard.positionsByStatus.mockReset()
     mockKitchenBoard.positionsByStatus.mockImplementation(positionsByStatus)
   })
 
-  const screenCases = [
-    { Component: NewOrdersScreen, status: 'NEW', expectedTitle: 'Cortado' },
-    { Component: InProgressOrdersScreen, status: 'IN_PROGRESS', expectedTitle: 'Pour over' },
-    { Component: ReadyOrdersScreen, status: 'READY', expectedTitle: 'Matcha' },
-  ] as const
+  afterEach(async () => {
+    await cleanupDocument()
+  })
+
+  const screenCases: Array<{
+    status: KitchenBoardScreenStatus
+    expectedTitle: string
+  }> = [
+    { status: 'NEW', expectedTitle: 'Cortado' },
+    { status: 'IN_PROGRESS', expectedTitle: 'Pour over' },
+    { status: 'READY', expectedTitle: 'Matcha' },
+  ]
 
   for (const screenCase of screenCases) {
     it(`renders ${screenCase.status} positions from KitchenBoardContext`, () => {
-      const Screen = screenCase.Component
-      const markup = renderToStaticMarkup(<Screen />)
+      const markup = renderToStaticMarkup(<KitchenOrdersScreen statusFilter={screenCase.status} />)
 
       expect(mockKitchenBoard.positionsByStatus).toHaveBeenCalledWith(screenCase.status)
       expect(markup).toContain(`data-status-filter="${screenCase.status}"`)
@@ -73,18 +78,38 @@ describe('kitchen order screens', () => {
     })
   }
 
-  it('wires grid clicks to advancePosition', () => {
-    const advancePosition = vi.fn()
-    const statusFilter: KitchenBoardScreenStatus = 'NEW'
-    const gridProps = getKitchenOrdersGridProps(statusFilter, {
-      advancePosition,
-      positionsByStatus,
-    })
+  it('renders loading state before the empty grid state', () => {
+    mockKitchenBoard.loading = true
+    mockKitchenBoard.positionsByStatus.mockReturnValue([])
 
-    gridProps.onPositionClick('pos-new')
+    const markup = renderToStaticMarkup(<KitchenOrdersScreen statusFilter="NEW" />)
 
-    expect(gridProps.positions.map((position) => position.id)).toEqual(['pos-new'])
-    expect(advancePosition).toHaveBeenCalledWith('pos-new')
+    expect(markup).toContain('data-status-filter="NEW"')
+    expect(markup).toContain('Loading orders')
+    expect(markup).not.toContain('Очередь пуста')
+    expect(mockKitchenBoard.positionsByStatus).not.toHaveBeenCalled()
+  })
+
+  it('renders error state before the empty grid state', () => {
+    mockKitchenBoard.error = 'Load failed'
+    mockKitchenBoard.positionsByStatus.mockReturnValue([])
+
+    const markup = renderToStaticMarkup(<KitchenOrdersScreen statusFilter="NEW" />)
+
+    expect(markup).toContain('role="alert"')
+    expect(markup).toContain('Unable to load orders')
+    expect(markup).toContain('Load failed')
+    expect(markup).not.toContain('Очередь пуста')
+    expect(mockKitchenBoard.positionsByStatus).not.toHaveBeenCalled()
+  })
+
+  it('wires rendered card clicks to advancePosition', async () => {
+    const { container } = await renderIntoDocument(<KitchenOrdersScreen statusFilter="NEW" />)
+    const card = container.querySelector('[data-position-id="pos-new"]')
+
+    expect(card).not.toBeNull()
+    await clickElement(card!)
+
+    expect(mockKitchenBoard.advancePosition).toHaveBeenCalledWith('pos-new')
   })
 })
-
