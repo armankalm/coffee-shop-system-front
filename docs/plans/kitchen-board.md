@@ -73,10 +73,10 @@
 - [x] Показывать в `OrderPositionsGrid`, когда `positions.length === 0`
 
 ### Task 9: Анимации (framer-motion)
-- [ ] Установить `framer-motion` (`npm i framer-motion`)
-- [ ] Обернуть карточки в `OrderPositionsGrid` через `<AnimatePresence>` + `motion.div` с `layout`
-- [ ] Настроить `exit` (fade-out + scale) при удалении карточки со страницы
-- [ ] Проверить плавную перекладку оставшихся карточек грида без резких скачков
+- [x] Установить `framer-motion` (`npm i framer-motion`)
+- [x] Обернуть карточки в `OrderPositionsGrid` через `<AnimatePresence>` + `motion.div` с `layout`
+- [x] Настроить `exit` (fade-out + scale) при удалении карточки со страницы
+- [x] Проверить плавную перекладку оставшихся карточек грида без резких скачков
 
 ### Task 10: Роуты и интеграция в App
 - [ ] Добавить в `src/App.tsx` группу роутов `/orders/*` внутри `RequireAuth` → `RequireRole` → `KitchenLayout`

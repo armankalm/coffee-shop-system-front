@@ -43,8 +43,10 @@ describe('OrderPositionsGrid', () => {
     )
 
     expect(markup).toContain('type="button"')
+    expect(markup).toContain('data-position-layout="older-ready"')
     expect(markup).toContain('data-position-id="older-ready"')
     expect(markup).toContain('data-status="READY"')
+    expect(markup).toContain('data-position-layout="newer-new"')
     expect(markup).toContain('data-position-id="newer-new"')
     expect(markup).toContain('data-status="NEW"')
   })

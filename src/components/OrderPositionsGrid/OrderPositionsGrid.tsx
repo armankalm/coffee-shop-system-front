@@ -1,3 +1,5 @@
+import { AnimatePresence, motion } from 'framer-motion'
+
 import type { OrderPosition, OrderPositionStatus } from '../../types'
 import { EmptyState } from '../EmptyState'
 import { PositionCard } from '../PositionCard'
@@ -29,13 +31,21 @@ export function OrderPositionsGrid({
           description="Новые позиции появятся здесь автоматически."
         />
       ) : (
-        positions.map((position) => (
-          <PositionCard
-            key={position.id}
-            position={position}
-            onPositionClick={onPositionClick}
-          />
-        ))
+        <AnimatePresence initial={false} mode="popLayout">
+          {positions.map((position) => (
+            <motion.div
+              key={position.id}
+              className={styles.gridItem}
+              data-position-layout={position.id}
+              layout
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+            >
+              <PositionCard position={position} onPositionClick={onPositionClick} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
       )}
     </section>
   )
