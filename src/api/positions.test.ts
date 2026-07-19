@@ -1,71 +1,92 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { OrderPosition } from '../types'
+import { apiGet, apiPatch } from './client'
+import { advancePositionStatus, getPositions, nextStatus, type OrderItemBoardDto } from './positions'
 
-type PositionsApi = typeof import('./positions')
+vi.mock('./client', () => ({
+  apiGet: vi.fn(),
+  apiPatch: vi.fn(),
+}))
 
-let positionsApi: PositionsApi
-let orderPositions: OrderPosition[]
+const mockedApiGet = vi.mocked(apiGet)
+const mockedApiPatch = vi.mocked(apiPatch)
+
+function boardDto(overrides: Partial<OrderItemBoardDto> = {}): OrderItemBoardDto {
+  return {
+    id: 42,
+    orderId: 104,
+    shopId: 1,
+    orderNumber: '№104',
+    title: 'Латте',
+    quantity: 1,
+    status: 'NEW',
+    statusNameRu: 'Новый',
+    createdAt: '2026-07-19T08:00:00Z',
+    comment: null,
+    ...overrides,
+  }
+}
 
 describe('positions api', () => {
-  beforeEach(async () => {
-    vi.resetModules()
-    positionsApi = await import('./positions')
-    orderPositions = (await import('../mocks')).orderPositions
+  beforeEach(() => {
+    vi.clearAllMocks()
   })
 
   it('maps position statuses to the next kitchen-board step', () => {
-    expect(positionsApi.nextStatus('NEW')).toBe('IN_PROGRESS')
-    expect(positionsApi.nextStatus('IN_PROGRESS')).toBe('READY')
-    expect(positionsApi.nextStatus('READY')).toBe('COMPLETED')
-    expect(positionsApi.nextStatus('COMPLETED')).toBe('COMPLETED')
+    expect(nextStatus('NEW')).toBe('IN_PROGRESS')
+    expect(nextStatus('IN_PROGRESS')).toBe('READY')
+    expect(nextStatus('READY')).toBe('COMPLETED')
+    expect(nextStatus('COMPLETED')).toBe('COMPLETED')
   })
 
-  it('loads copied mock positions', async () => {
-    const positions = await positionsApi.getPositions()
+  it('loads positions from the admin order-items endpoint and maps them', async () => {
+    mockedApiGet.mockResolvedValue([
+      boardDto({ id: 7, quantity: 2, comment: 'Корица' }),
+    ])
 
-    expect(positions).toHaveLength(orderPositions.length)
-    expect(orderPositions.length).toBeGreaterThanOrEqual(8)
-    expect(orderPositions.length).toBeLessThanOrEqual(12)
-    expect(orderPositions.some((position) => position.comment)).toBe(true)
-    expect(positions[0]).toEqual(orderPositions[0])
-    expect(positions[0]).not.toBe(orderPositions[0])
+    const positions = await getPositions()
+
+    expect(mockedApiGet).toHaveBeenCalledWith('/admin/order-items')
+    expect(positions).toEqual([
+      {
+        id: '7',
+        orderNumber: '№104',
+        title: 'Латте ×2',
+        status: 'NEW',
+        createdAt: '2026-07-19T08:00:00Z',
+        comment: 'Корица',
+      },
+    ])
   })
 
-  it('advances a position and persists the updated status', async () => {
-    const newPosition = orderPositions.find((position) => position.status === 'NEW')
+  it('omits comment when the backend returns null', async () => {
+    mockedApiGet.mockResolvedValue([boardDto({ comment: null })])
 
-    if (!newPosition) {
-      throw new Error('Expected at least one NEW mock position')
-    }
+    const [position] = await getPositions()
 
-    const inProgressPosition = await positionsApi.advancePositionStatus(newPosition.id, 'NEW')
-    const readyPosition = await positionsApi.advancePositionStatus(newPosition.id, 'IN_PROGRESS')
-    const completedPosition = await positionsApi.advancePositionStatus(newPosition.id, 'READY')
-    const repeatedCompletedPosition = await positionsApi.advancePositionStatus(newPosition.id, 'COMPLETED')
-    const positions = await positionsApi.getPositions()
-    const persistedPosition = positions.find((position) => position.id === newPosition.id)
-
-    expect(inProgressPosition.status).toBe('IN_PROGRESS')
-    expect(readyPosition.status).toBe('READY')
-    expect(completedPosition.status).toBe('COMPLETED')
-    expect(repeatedCompletedPosition.status).toBe('COMPLETED')
-    expect(persistedPosition?.status).toBe('COMPLETED')
+    expect(position).not.toHaveProperty('comment')
   })
 
-  it('rejects unknown position ids', async () => {
-    await expect(positionsApi.advancePositionStatus('missing-position')).rejects.toThrow('missing-position')
+  it('advances a position by PATCHing the target status', async () => {
+    mockedApiPatch.mockResolvedValue(boardDto({ id: 42, status: 'IN_PROGRESS' }))
+
+    const updated = await advancePositionStatus('42', 'NEW')
+
+    expect(mockedApiPatch).toHaveBeenCalledWith('/admin/order-items/42/status', {
+      statusCode: 'IN_PROGRESS',
+    })
+    expect(updated.status).toBe('IN_PROGRESS')
+    expect(updated.id).toBe('42')
   })
 
-  it('rejects stale expected statuses', async () => {
-    const newPosition = orderPositions.find((position) => position.status === 'NEW')
+  it('refuses to advance a position that is already completed', async () => {
+    await expect(advancePositionStatus('42', 'COMPLETED')).rejects.toThrow('already COMPLETED')
+    expect(mockedApiPatch).not.toHaveBeenCalled()
+  })
 
-    if (!newPosition) {
-      throw new Error('Expected at least one NEW mock position')
-    }
+  it('propagates backend errors (e.g. unknown id)', async () => {
+    mockedApiPatch.mockRejectedValue(new Error('Order item not found: 999'))
 
-    await positionsApi.advancePositionStatus(newPosition.id, 'NEW')
-
-    await expect(positionsApi.advancePositionStatus(newPosition.id, 'NEW')).rejects.toThrow('expected NEW')
+    await expect(advancePositionStatus('999', 'NEW')).rejects.toThrow('not found')
   })
 })
