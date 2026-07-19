@@ -47,10 +47,10 @@
 - [x] Обернуть layout провайдером `KitchenBoardProvider` (внутри `RequireRole`)
 
 ### Task 5: Переиспользуемый OrderPositionsGrid
-- [ ] Создать `src/components/OrderPositionsGrid/OrderPositionsGrid.tsx` + `.module.css` + `index.ts`
-- [ ] Пропсы: `statusFilter`, `positions`, `onPositionClick(id)`
-- [ ] CSS Grid: `repeat(4, minmax(0, 1fr))` на Full HD, `gap: 16px`, адаптив 2-3 на планшете, 1-2 на мобильном
-- [ ] Отфильтрованный и FIFO-отсортированный список отдаётся снаружи (из Context), Grid только рендерит
+- [x] Создать `src/components/OrderPositionsGrid/OrderPositionsGrid.tsx` + `.module.css` + `index.ts`
+- [x] Пропсы: `statusFilter`, `positions`, `onPositionClick(id)`
+- [x] CSS Grid: `repeat(4, minmax(0, 1fr))` на Full HD, `gap: 16px`, адаптив 2-3 на планшете, 1-2 на мобильном
+- [x] Отфильтрованный и FIFO-отсортированный список отдаётся снаружи (из Context), Grid только рендерит
 
 ### Task 6: Карточка позиции (PositionCard)
 - [ ] Создать `src/components/PositionCard/PositionCard.tsx` + `.module.css` + `index.ts`
