@@ -48,4 +48,15 @@ describe('OrderPositionsGrid', () => {
     expect(markup).toContain('data-position-id="newer-new"')
     expect(markup).toContain('data-status="NEW"')
   })
+
+  it('renders an empty state when there are no positions', () => {
+    const markup = renderToStaticMarkup(
+      <OrderPositionsGrid statusFilter="NEW" positions={[]} onPositionClick={() => undefined} />,
+    )
+
+    expect(markup).toContain('role="status"')
+    expect(markup).toContain('Очередь пуста')
+    expect(markup).toContain('Новые позиции появятся здесь автоматически.')
+    expect(markup).not.toContain('data-position-id=')
+  })
 })

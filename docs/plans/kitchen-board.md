@@ -68,9 +68,9 @@
 - [x] Экспортировать экраны через barrel (`src/screens/index.ts` или отдельный `kitchen/index.ts`)
 
 ### Task 8: EmptyState (пустая очередь)
-- [ ] Создать `src/components/EmptyState/EmptyState.tsx` + `.module.css` + `index.ts`
-- [ ] Заглушка «Очередь пуста» с иконкой/иллюстрацией, принимает `title`/`description` пропсами
-- [ ] Показывать в `OrderPositionsGrid`, когда `positions.length === 0`
+- [x] Создать `src/components/EmptyState/EmptyState.tsx` + `.module.css` + `index.ts`
+- [x] Заглушка «Очередь пуста» с иконкой/иллюстрацией, принимает `title`/`description` пропсами
+- [x] Показывать в `OrderPositionsGrid`, когда `positions.length === 0`
 
 ### Task 9: Анимации (framer-motion)
 - [ ] Установить `framer-motion` (`npm i framer-motion`)
