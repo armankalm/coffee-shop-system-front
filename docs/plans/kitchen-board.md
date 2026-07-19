@@ -61,11 +61,11 @@
 - [x] Клик по карточке вызывает `onPositionClick(id)`
 
 ### Task 7: Три страницы (роуты)
-- [ ] Создать `src/screens/kitchen/NewOrdersScreen.tsx` — `statusFilter=NEW`, клик → `advancePosition` (в `IN_PROGRESS`)
-- [ ] Создать `src/screens/kitchen/InProgressOrdersScreen.tsx` — `statusFilter=IN_PROGRESS`, клик → `READY`
-- [ ] Создать `src/screens/kitchen/ReadyOrdersScreen.tsx` — `statusFilter=READY`, клик → `COMPLETED` (исчезает с доски)
-- [ ] Каждая страница берёт позиции из `useKitchenBoard().positionsByStatus(status)` и рендерит `OrderPositionsGrid`
-- [ ] Экспортировать экраны через barrel (`src/screens/index.ts` или отдельный `kitchen/index.ts`)
+- [x] Создать `src/screens/kitchen/NewOrdersScreen.tsx` — `statusFilter=NEW`, клик → `advancePosition` (в `IN_PROGRESS`)
+- [x] Создать `src/screens/kitchen/InProgressOrdersScreen.tsx` — `statusFilter=IN_PROGRESS`, клик → `READY`
+- [x] Создать `src/screens/kitchen/ReadyOrdersScreen.tsx` — `statusFilter=READY`, клик → `COMPLETED` (исчезает с доски)
+- [x] Каждая страница берёт позиции из `useKitchenBoard().positionsByStatus(status)` и рендерит `OrderPositionsGrid`
+- [x] Экспортировать экраны через barrel (`src/screens/index.ts` или отдельный `kitchen/index.ts`)
 
 ### Task 8: EmptyState (пустая очередь)
 - [ ] Создать `src/components/EmptyState/EmptyState.tsx` + `.module.css` + `index.ts`
